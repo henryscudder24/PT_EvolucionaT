@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 200 20% 98%;
+  --foreground: 200 50% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 200 50% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 200 50% 15%;
+  --primary: 175 75% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 195 55% 55%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 200 10% 92%;
+  --muted-foreground: 200 30% 40%;
+  --accent: 160 70% 45%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 85% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 200 15% 85%;
+  --input: 200 15% 85%;
+  --ring: 175 75% 40%;
+  --radius: 0.75rem;
+  --chart-1: 175 75% 40%;
+  --chart-2: 195 55% 55%;
+  --chart-3: 160 70% 45%;
+  --chart-4: 220 60% 60%;
+  --chart-5: 130 60% 50%;
+}
+
+.dark {
+  --background: 200 50% 10%;
+  --foreground: 0 0% 95%;
+  --card: 200 50% 12%;
+  --card-foreground: 0 0% 95%;
+  --popover: 200 50% 12%;
+  --popover-foreground: 0 0% 95%;
+  --primary: 175 70% 35%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 195 50% 50%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 200 30% 20%;
+  --muted-foreground: 200 20% 65%;
+  --accent: 160 65% 40%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 70% 45%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 200 30% 20%;
+  --input: 200 30% 20%;
+  --ring: 175 70% 35%;
+  --chart-1: 175 70% 35%;
+  --chart-2: 195 50% 50%;
+  --chart-3: 160 65% 40%;
+  --chart-4: 220 55% 55%;
+  --chart-5: 130 55% 45%;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+@layer components {
+  .survey-container {
+    @apply max-w-4xl mx-auto p-4 md:p-8;
+  }
+
+  .survey-card {
+    @apply bg-card border border-border rounded-xl shadow-md p-6 mb-8;
+  }
+
+  .survey-step {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .survey-title {
+    @apply text-2xl md:text-3xl font-bold text-primary mb-4;
+  }
+
+  .survey-subtitle {
+    @apply text-lg md:text-xl font-semibold text-foreground mb-6;
+  }
+
+  .survey-question {
+    @apply text-base md:text-lg font-medium text-foreground mb-2;
+  }
+
+  .survey-button-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-6 rounded-lg transition-colors;
+  }
+
+  .survey-button-secondary {
+    @apply bg-secondary hover:bg-secondary/90 text-secondary-foreground font-medium py-2 px-6 rounded-lg transition-colors;
+  }
+
+  .survey-progress {
+    @apply h-2 rounded-full bg-muted overflow-hidden mb-6;
+  }
+
+  .survey-progress-bar {
+    @apply h-full bg-primary transition-all duration-500 ease-out;
+  }
+
+  .survey-nav {
+    @apply flex justify-between mt-8;
+  }
+
+  .survey-input {
+    @apply bg-background border border-input rounded-lg py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+
+  .survey-select {
+    @apply bg-background border border-input rounded-lg py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+
+  .survey-radio-group {
+    @apply space-y-2;
+  }
+
+  .survey-checkbox-group {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+  }
+
+  .survey-visual-option {
+    @apply border-2 border-border hover:border-primary rounded-lg p-4 cursor-pointer transition-all flex items-center gap-3;
+  }
+
+  .survey-visual-option-selected {
+    @apply border-primary bg-primary/10;
+  }
+
+  .motivational-message {
+    @apply text-center text-lg font-medium text-accent py-4;
+  }
+}

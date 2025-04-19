@@ -72,6 +72,11 @@ npm run build
 yarn build
 ```
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 665210c (Primeras fases del Proyecto -MVPl)
 ## Licencia
 
 Este proyecto es **propietario y confidencial**. Todos los derechos reservados.

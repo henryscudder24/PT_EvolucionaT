@@ -5,6 +5,7 @@ from app.routes import perfil_usuario
 from app.routes import meta_usuario
 from app.routes import seguimiento_meta
 from app.routes import habitos_diarios
+from app.routes import historial_medico
 app = FastAPI(title="EvolucionaT Backend")
 
 
@@ -26,6 +27,16 @@ app.include_router(perfil_usuario.router, prefix="/perfil", tags=["Perfil Usuari
 app.include_router(meta_usuario.router, prefix="/meta", tags=["Meta Usuario"])
 app.include_router(seguimiento_meta.router, prefix="/seguimiento-meta", tags=["Seguimiento Meta"])
 app.include_router(habitos_diarios.router, prefix="/habitos", tags=["Hábitos Diarios"])
+app.include_router(historial_medico.router, prefix="/historial", tags=["Historial Médico"])
+
+
+
+
+
+
+
+
+
 
 @app.get("/")
 def root():

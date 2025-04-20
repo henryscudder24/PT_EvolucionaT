@@ -18,7 +18,7 @@ import Services from './components/pages/Services';
 import Contact from './components/pages/Contact';
 import { useSurvey } from './context/SurveyContext';
 import Register from './components/pages/auth/Register';
-import Login from './components/pages/auth/login';
+import Login from './components/pages/auth/Login';
 
 // Componente que maneja la lógica de mostrar el paso actual
 const SurveySteps: React.FC = () => {

@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import usuarios
 from app.routes import perfil_usuario
+from app.routes import meta_usuario
+from app.routes import seguimiento_meta
 app = FastAPI(title="EvolucionaT Backend")
 
 # Permitir comunicación desde el frontend (React)
@@ -23,6 +25,8 @@ app.add_middleware(
 # app.include_router(usuarios.router, prefix="/usuarios", tags=["Usuarios"])
 app.include_router(usuarios.router, prefix="/usuarios", tags=["Usuarios"])
 app.include_router(perfil_usuario.router, prefix="/perfil", tags=["Perfil Usuario"])
+app.include_router(meta_usuario.router, prefix="/meta", tags=["Meta Usuario"])
+app.include_router(seguimiento_meta.router, prefix="/seguimiento-meta", tags=["Seguimiento Meta"])
 
 @app.get("/")
 def root():

@@ -19,6 +19,10 @@ const Navbar = () => {
             <Link to="/about" className="text-white hover:text-primary transition-colors">Sobre Nosotros</Link>
             <Link to="/services" className="text-white hover:text-primary transition-colors">Servicios</Link>
             <Link to="/contact" className="text-white hover:text-primary transition-colors">Contacto</Link>
+
+            {/*Auth Links*/}
+            <Link to="/register" className="text-white hover:text-primary transition-colors">Registrase</Link>
+            <Link to="/login" className="text-white hover:text-primary transition-colors">Iniciar Sesión</Link>
           </div>
 
           {/* Social Media Links */}

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes import usuarios
 
 app = FastAPI(title="EvolucionaT Backend")
 
@@ -20,6 +21,7 @@ app.add_middleware(
 # Aquí se importarán y montarán las rutas
 # from app.routes import usuarios
 # app.include_router(usuarios.router, prefix="/usuarios", tags=["Usuarios"])
+app.include_router(usuarios.router, prefix="/usuarios", tags=["Usuarios"])
 
 @app.get("/")
 def root():

@@ -4,9 +4,10 @@ from app.routes import usuarios
 from app.routes import perfil_usuario
 from app.routes import meta_usuario
 from app.routes import seguimiento_meta
+from app.routes import habitos_diarios
 app = FastAPI(title="EvolucionaT Backend")
 
-# Permitir comunicación desde el frontend (React)
+
 origins = [
     "http://localhost:3000",  
     "http://localhost:5173",  
@@ -20,13 +21,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Aquí se importarán y montarán las rutas
-# from app.routes import usuarios
-# app.include_router(usuarios.router, prefix="/usuarios", tags=["Usuarios"])
 app.include_router(usuarios.router, prefix="/usuarios", tags=["Usuarios"])
 app.include_router(perfil_usuario.router, prefix="/perfil", tags=["Perfil Usuario"])
 app.include_router(meta_usuario.router, prefix="/meta", tags=["Meta Usuario"])
 app.include_router(seguimiento_meta.router, prefix="/seguimiento-meta", tags=["Seguimiento Meta"])
+app.include_router(habitos_diarios.router, prefix="/habitos", tags=["Hábitos Diarios"])
 
 @app.get("/")
 def root():

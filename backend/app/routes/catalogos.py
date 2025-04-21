@@ -10,7 +10,7 @@ def obtener_catalogos(db: Session = Depends(get_db)):
     return {
         "tipo_usuario": db.query(models.TipoUsuario).all(),
         "tipo_objetivo": db.query(models.TipoObjetivo).all(),
-        "tipo_dieta": db.query(models.TipoDieta).all(),
+        
         "nivel_actividad": [
             {"clave": "sedentario", "descripcion": "Sedentario (poco o nada de ejercicio)"},
             {"clave": "moderado", "descripcion": "Moderado (ejercicio ligero 1-3 días/semana)"},

@@ -14,10 +14,10 @@ from app.routes import seguimiento_dieta
 from app.routes import plan_rutina_usuario
 from app.routes import seguimiento_rutina
 from app.routes import ejercicio_preferido
-
+from app.routes import catalogos
+from app.routes import perfil_restriccion
 
 app = FastAPI(title="EvolucionaT Backend")
-
 
 origins = [
     "http://localhost:3000",  
@@ -46,7 +46,8 @@ app.include_router(seguimiento_dieta.router, prefix="/seguimiento-dieta", tags=[
 app.include_router(plan_rutina_usuario.router, prefix="/plan-rutina", tags=["Plan Rutina Usuario"])
 app.include_router(seguimiento_rutina.router, prefix="/seguimiento-rutina", tags=["Seguimiento Rutina"])
 app.include_router(ejercicio_preferido.router, prefix="/ejercicio", tags=["Ejercicio Preferido"])
-
+app.include_router(catalogos.router, prefix="/catalogos", tags=["Catálogos"])
+app.include_router(perfil_restriccion.router, prefix="/perfil-restriccion", tags=["Perfil Restricción"])
 
 @app.get("/")
 def root():

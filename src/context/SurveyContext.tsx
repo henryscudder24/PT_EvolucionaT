@@ -1,54 +1,53 @@
 import type React from 'react';
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react';
 
 // Tipos para los datos de la encuesta
 export interface SurveyData {
-  // Sección 1: Información Personal Básica
-  gender: string;
-  age: string;
-  height: string;
-  weight: string;
-  activityLevel: string;
+  // Sección 1: Perfil de Usuario
+  genero: string;
+  edad: string;
+  altura: string;
+  peso: string;
+  nivelActividad: string;
 
   // Sección 2: Preferencias Alimentarias
-  dietType: string[];
-  allergies: string[];
-  favoriteFoods: string[];
-  foodsToAvoid: string;
+  dietasSugeridas: string[];
+  alergiasSugeridas: string[];
+  favoritosSugeridos: string[];
+  alimentosEvitar: string;
 
   // Sección 3: Metas y Objetivos
-  mainGoal: string;
-  timeframe: string;
-  commitmentLevel: number;
-  measurementPreference: string[];
+  objetivoPrincipal: string;
+  tiempoMeta: string;
+  nivelCompromiso: number;
+  preferenciaMedicion: string[];
 
-  // Sección 4: Nivel de Condición Física y Entrenamiento
-  exerciseFrequency: string;
-  exerciseType: string[];
-  availableEquipment: string[];
-  availableTime: string;
-  medicalConditions: string;
+  // Sección 4: Nivel físico
+  frecuenciaEjercicio: string;
+  tipoEjercicio: string[];
+  equipamientoDisponible: string[];
+  tiempoDisponible: string;
+  condicionesMedicas: string;
 
   // Sección 5: Historial Médico
-  hasChronicConditions: boolean;
-  chronicConditions: string[];
-  takingMedication: boolean;
-  medications: string;
-  recentInjuries: string[];
-  familyHistoryIssues: string[];
+  tieneCondicionesCronicas: boolean;
+  condicionesCronicas: string[];
+  tomaMedicacion: boolean;
+  medicamentos: string;
+  lesionesRecientes: string[];
+  antecedentesFamiliares: string[];
 
   // Sección 6: Hábitos Diarios
-  sleepHours: string;
-  sleepQuality: string;
-  stressLevel: string;
-  waterIntake: string;
-  mealFrequency: string;
-  snackingHabits: string;
-  screenTime: string;
-  workType: string;
+  horasSueño: string;
+  calidadSueño: string;
+  nivelEstres: string;
+  consumoAgua: string;
+  frecuenciaComidas: string;
+  habitosSnacks: string;
+  tiempoPantalla: string;
+  tipoTrabajo: string;
 }
 
-// Interfaz del contexto
 interface SurveyContextType {
   currentStep: number;
   setCurrentStep: (step: number) => void;
@@ -62,53 +61,49 @@ interface SurveyContextType {
   finishSurvey: () => void;
 }
 
-// Valores iniciales por defecto
+// Datos iniciales
 const initialSurveyData: SurveyData = {
-  gender: '',
-  age: '',
-  height: '',
-  weight: '',
-  activityLevel: '',
+  genero: '',
+  edad: '',
+  altura: '',
+  peso: '',
+  nivelActividad: '',
 
-  dietType: [],
-  allergies: [],
-  favoriteFoods: [],
-  foodsToAvoid: '',
+  dietasSugeridas: [],
+  alergiasSugeridas: [],
+  favoritosSugeridos: [],
+  alimentosEvitar: '',
 
-  mainGoal: '',
-  timeframe: '',
-  commitmentLevel: 3, // Nivel medio por defecto
-  measurementPreference: [],
+  objetivoPrincipal: '',
+  tiempoMeta: '',
+  nivelCompromiso: 3,
+  preferenciaMedicion: [],
 
-  exerciseFrequency: '',
-  exerciseType: [],
-  availableEquipment: [],
-  availableTime: '',
-  medicalConditions: '',
+  frecuenciaEjercicio: '',
+  tipoEjercicio: [],
+  equipamientoDisponible: [],
+  tiempoDisponible: '',
+  condicionesMedicas: '',
 
-  // Nuevos campos para historial médico
-  hasChronicConditions: false,
-  chronicConditions: [],
-  takingMedication: false,
-  medications: '',
-  recentInjuries: [],
-  familyHistoryIssues: [],
+  tieneCondicionesCronicas: false,
+  condicionesCronicas: [],
+  tomaMedicacion: false,
+  medicamentos: '',
+  lesionesRecientes: [],
+  antecedentesFamiliares: [],
 
-  // Nuevos campos para hábitos diarios
-  sleepHours: '',
-  sleepQuality: '',
-  stressLevel: '',
-  waterIntake: '',
-  mealFrequency: '',
-  snackingHabits: '',
-  screenTime: '',
-  workType: '',
+  horasSueño: '',
+  calidadSueño: '',
+  nivelEstres: '',
+  consumoAgua: '',
+  frecuenciaComidas: '',
+  habitosSnacks: '',
+  tiempoPantalla: '',
+  tipoTrabajo: '',
 };
 
-// Crear el contexto
 const SurveyContext = createContext<SurveyContextType | undefined>(undefined);
 
-// Hook personalizado para usar el contexto
 export const useSurvey = () => {
   const context = useContext(SurveyContext);
   if (!context) {
@@ -117,29 +112,24 @@ export const useSurvey = () => {
   return context;
 };
 
-// Proveedor del contexto
 export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [surveyData, setSurveyData] = useState<SurveyData>(initialSurveyData);
-  const totalSteps = 6; // Actualizado a 6 pasos
+  const totalSteps = 6;
 
-  // Actualizar datos de la encuesta
   const updateSurveyData = (data: Partial<SurveyData>) => {
-    setSurveyData(prevData => ({ ...prevData, ...data }));
+    setSurveyData(prev => ({ ...prev, ...data }));
   };
 
-  // Navegar al siguiente paso
   const goToNextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
       window.scrollTo(0, 0);
-    } else if (currentStep === totalSteps) {
-      // Si estamos en el último paso, llamamos a la función de finalizar encuesta
+    } else {
       finishSurvey();
     }
   };
 
-  // Navegar al paso anterior
   const goToPreviousStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
@@ -147,43 +137,33 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
-  // Finalizar la encuesta
   const finishSurvey = () => {
-    // Aquí podríamos enviar los datos a un servidor si fuera necesario
     console.log('Encuesta finalizada:', surveyData);
-
-    // Avanzar al paso de finalización (más allá del último paso)
     setCurrentStep(totalSteps + 1);
-
-    // Desplazamiento al inicio de la página
     window.scrollTo(0, 0);
   };
 
-  // Verificar si un paso está completo
   const isStepComplete = (step: number): boolean => {
     switch (step) {
-      case 1: // Información Personal
-        return !!(surveyData.gender && surveyData.age && surveyData.height && surveyData.weight && surveyData.activityLevel);
-      case 2: // Preferencias Alimentarias
-        return !!(surveyData.dietType.length > 0 && surveyData.favoriteFoods.length > 0);
-      case 3: // Metas y Objetivos
-        return !!(surveyData.mainGoal && surveyData.timeframe && surveyData.measurementPreference.length > 0);
-      case 4: // Nivel de Condición Física
-        return !!(surveyData.exerciseFrequency && surveyData.exerciseType.length > 0 && surveyData.availableTime);
-      case 5: // Historial Médico
-        // No requerimos todos los campos porque algunos pueden no aplicar
+      case 1:
+        return !!(surveyData.genero && surveyData.edad && surveyData.altura && surveyData.peso && surveyData.nivelActividad);
+      case 2:
+        return !!(surveyData.dietasSugeridas.length && surveyData.favoritosSugeridos.length);
+      case 3:
+        return !!(surveyData.objetivoPrincipal && surveyData.tiempoMeta && surveyData.preferenciaMedicion.length);
+      case 4:
+        return !!(surveyData.frecuenciaEjercicio && surveyData.tipoEjercicio.length && surveyData.tiempoDisponible);
+      case 5:
         return true;
-      case 6: // Hábitos Diarios
-        return !!(surveyData.sleepHours && surveyData.sleepQuality && surveyData.stressLevel);
+      case 6:
+        return !!(surveyData.horasSueño && surveyData.calidadSueño && surveyData.nivelEstres);
       default:
         return false;
     }
   };
 
-  // Verificar si es el último paso
   const isLastStep = currentStep === totalSteps;
 
-  // Valor del contexto
   const contextValue: SurveyContextType = {
     currentStep,
     setCurrentStep,
@@ -194,7 +174,7 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     isStepComplete,
     isLastStep,
     totalSteps,
-    finishSurvey
+    finishSurvey,
   };
 
   return (

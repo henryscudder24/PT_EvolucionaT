@@ -23,8 +23,34 @@ const Login = () => {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: FormData) => {
-    //datos al backend
+  const onSubmit = async (data: FormData) => {
+    try {
+      const response = await fetch("http://localhost:8000/usuarios/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          correo: data.email,
+          contraseña: data.password,
+        }),
+      });
+  
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("Error en el login:", error);
+        alert("Error: " + error.detail);
+        return;
+      }
+  
+      const user = await response.json();
+      console.log("✅ Usuario autenticado:", user);
+      alert(`Bienvenido, ${user.nombre}!`);
+  
+      
+    } catch (err) {
+      console.error("Error inesperado:", err);
+    }
   };
 
   return (

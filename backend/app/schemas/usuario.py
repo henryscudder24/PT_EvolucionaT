@@ -9,7 +9,7 @@ class UsuarioCreate(UsuarioBase):
 
 class UsuarioLogin(BaseModel):
     correo: str
-    contrasena: str
+    contraseña: str
 
 class UsuarioOut(UsuarioBase):
     id: int

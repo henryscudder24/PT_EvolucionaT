@@ -12,7 +12,7 @@ from app.routes import progreso_usuario
 from app.routes import plan_dieta_usuario
 from app.routes import seguimiento_dieta
 from app.routes import plan_rutina_usuario
-
+from app.routes import seguimiento_rutina
 
 app = FastAPI(title="EvolucionaT Backend")
 
@@ -42,7 +42,7 @@ app.include_router(progreso_usuario.router, prefix="/progreso", tags=["Progreso 
 app.include_router(plan_dieta_usuario.router, prefix="/plan-dieta", tags=["Plan Dieta Usuario"])
 app.include_router(seguimiento_dieta.router, prefix="/seguimiento-dieta", tags=["Seguimiento Dieta"])
 app.include_router(plan_rutina_usuario.router, prefix="/plan-rutina", tags=["Plan Rutina Usuario"])
-
+app.include_router(seguimiento_rutina.router, prefix="/seguimiento-rutina", tags=["Seguimiento Rutina"])
 
 
 

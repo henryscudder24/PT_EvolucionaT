@@ -40,8 +40,33 @@ const Register = () => {
     resolver: zodResolver(registerSchema),
   }); 
 
-  const onSubmit = (data: FormData) => {
-    //datos al backend
+  const onSubmit = async (data: FormData) => {
+    try {
+      const response = await fetch("http://localhost:8000/usuarios/registro", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nombre: data.name,
+          correo: data.email,
+          contraseña: data.password,
+        }),
+      });
+  
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Error en el registro:', error);
+        alert('Error al registrarse: ' + (error.detail || 'Intenta con otro correo'));
+        return;
+      }
+  
+      alert('✅ Registro exitoso');
+      
+    } catch (err) {
+      console.error('Error inesperado:', err);
+      alert('Error de red o servidor');
+    }
   };
 
   return (

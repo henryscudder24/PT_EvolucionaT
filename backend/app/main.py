@@ -8,7 +8,7 @@ from app.routes import habitos_diarios
 from app.routes import historial_medico
 from app.routes import preferencias_alimentarias
 from app.routes import alimentos_evitados
-
+from app.routes import progreso_usuario
 
 
 
@@ -38,7 +38,7 @@ app.include_router(habitos_diarios.router, prefix="/habitos", tags=["Hábitos Di
 app.include_router(historial_medico.router, prefix="/historial", tags=["Historial Médico"])
 app.include_router(preferencias_alimentarias.router, prefix="/preferencias", tags=["Preferencias Alimentarias"])
 app.include_router(alimentos_evitados.router, prefix="/evitados", tags=["Alimentos Evitados"])
-
+app.include_router(progreso_usuario.router, prefix="/progreso", tags=["Progreso Usuario"])
 
 
 

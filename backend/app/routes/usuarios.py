@@ -28,7 +28,7 @@ def login(usuario: UsuarioLogin, db: Session = Depends(get_db)):
     return Token(
         access_token = token,
         token_type = "bearer",
-        nombre= user.nombre
+        user = UsuarioOut.model_validate(user)
     )
     
 @router.get("/me", response_model=UsuarioOut)

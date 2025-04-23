@@ -46,7 +46,7 @@ const Login = () => {
   
       const user = await response.json();
       console.log("✅ Usuario autenticado:", user);
-      alert(`Bienvenido, ${user.nombre}!`);
+      alert(`Bienvenido, ${user.user.nombre}!`);
       
       localStorage.setItem('access_token', user.access_token)
       navigate('/me');

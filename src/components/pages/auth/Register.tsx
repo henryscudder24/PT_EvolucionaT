@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,6 +36,7 @@ const registerSchema = z.object({
 type FormData = z.infer<typeof registerSchema>
 
 const Register = () => {
+  const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(registerSchema),
   }); 
@@ -62,6 +63,8 @@ const Register = () => {
       }
   
       alert('✅ Registro exitoso');
+      navigate('/login');
+
       
     } catch (err) {
       console.error('Error inesperado:', err);

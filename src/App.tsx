@@ -19,6 +19,7 @@ import Contact from './components/pages/Contact';
 import { useSurvey } from './context/SurveyContext';
 import Register from './components/pages/auth/Register';
 import Login from './components/pages/auth/Login';
+import Me from './components/pages/me';
 
 // Componente que maneja la lógica de mostrar el paso actual
 const SurveySteps: React.FC = () => {
@@ -72,6 +73,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/me" element={<Me />} />
           <Route
             path="/survey"
             element={<>

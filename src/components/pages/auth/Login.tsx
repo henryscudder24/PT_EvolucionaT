@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +19,7 @@ const loginSchema = z.object({
 type FormData = z.infer<typeof loginSchema>
 
 const Login = () => {
+  const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(loginSchema),
   });
@@ -46,8 +47,11 @@ const Login = () => {
       const user = await response.json();
       console.log("✅ Usuario autenticado:", user);
       alert(`Bienvenido, ${user.nombre}!`);
-  
       
+      localStorage.setItem('access_token', user.access_token)
+      navigate('/me');
+      //navigate('/survey');
+
     } catch (err) {
       console.error("Error inesperado:", err);
     }

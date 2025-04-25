@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.crud.usuario import get_user_by_id
+from app.schemas.usuario import UsuarioOut
 from datetime import datetime, timezone, timedelta
 from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer
@@ -35,4 +36,4 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = get_user_by_id(db, int(user_id))
     if user is None:
         raise credentials_exception
-    return user
+    return UsuarioOut.model_validate(user)

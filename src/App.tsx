@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { SurveyProvider } from './context/SurveyContext';
+import { AuthProvider } from './context/AuthContext';
 import SurveyProgress from './components/SurveyProgress';
 import SurveyNavigation from './components/SurveyNavigation';
 import PersonalInfo from './components/steps/PersonalInfo';
@@ -19,6 +20,8 @@ import Contact from './components/pages/Contact';
 import { useSurvey } from './context/SurveyContext';
 import Register from './components/pages/auth/Register';
 import Login from './components/pages/auth/Login';
+import UserProfile from './components/pages/UserProfile';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Componente que maneja la lógica de mostrar el paso actual
 const SurveySteps: React.FC = () => {
@@ -62,36 +65,50 @@ const SurveySteps: React.FC = () => {
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/survey"
-            element={<>
-              <header className="bg-primary text-white py-4">
-                <div className="container mx-auto px-4">
-                  <h1 className="text-2xl font-bold">EvolucionaT</h1>
-                  <p className="text-sm">Sistema de Recomendaciones Personalizadas</p>
-                </div>
-              </header>
-              <main className="container mx-auto survey-container py-8">
-                <SurveyProvider>
-                  <SurveySteps />
-                </SurveyProvider>
-              </main>
-            </>}
-          />
-        </Routes>
-        <Footer />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-background">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/survey"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <header className="bg-primary text-white py-4">
+                      <div className="container mx-auto px-4">
+                        <h1 className="text-2xl font-bold">EvolucionaT</h1>
+                        <p className="text-sm">Sistema de Recomendaciones Personalizadas</p>
+                      </div>
+                    </header>
+                    <main className="container mx-auto survey-container py-8">
+                      <SurveyProvider>
+                        <SurveySteps />
+                      </SurveyProvider>
+                    </main>
+                  </>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+          <Footer />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

@@ -1,0 +1,58 @@
+@startuml
+start
+
+partition "Sprint Planning" {
+  :Definir alcance Sprint 2;
+  :Asignar historias a pares Front/Back;
+  :Revisar dependencias y criterios de “Done”;
+}
+
+fork
+  partition "Recuperación de contraseña" {
+    :Diseñar UI de recuperación;
+    :Implementar endpoint backend (token + email);
+    :Probar flujo de restablecimiento;
+  }
+fork again
+  partition "Seguimiento de Progreso" {
+    :Diseñar formulario peso y ejercicios;
+    :Implementar endpoint Progreso_Usuario;
+    :Implementar endpoint Seguimiento_Rutina;
+    :Probar registro de datos;
+  }
+fork again
+  partition "Metas Personales" {
+    :Diseñar UI de metas;
+    :Implementar endpoint Meta_Usuario;
+    :Probar creación y listado de metas;
+  }
+fork again
+  partition "Integración OpenAI" {
+    :Definir prompt dieta;
+    :Definir prompt ejercicio;
+    :Implementar llamada a `/chat/completions`;
+    :Validar respuestas y mapear tablas;
+  }
+fork again
+  partition "Configuración Cuenta" {
+    :Diseñar UI ajustes de perfil;
+    :Implementar endpoint guardar ajustes;
+    :Implementar admin activar/desactivar usuario;
+    :Probar seguridad y permisos;
+  }
+fork again
+  partition "UX & Contenido" {
+    :Actualizar textos en páginas secundarias;
+    :Incorporar assets visuales en encuesta y resultados;
+    :Revisar consistencia de marca;
+  }
+end fork
+
+partition "Cierre de Sprint" {
+  :Ejecutar pruebas de integración;
+  :Revisión interna y demo al PO;
+  :Retrospectiva;
+}
+
+stop
+@enduml

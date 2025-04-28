@@ -1,0 +1,182 @@
+[33mcommit 3e13992e099f7e41608e964349b2c47464ce137e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Mon Apr 21 03:27:26 2025 -0400
+
+    login funcionando con pass hasheadas (se usa bcrypt y su funcion verify)
+
+[33mcommit 8d996e6278d4340fef2fc4091e521e8a998b9a3f[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Mon Apr 21 03:07:27 2025 -0400
+
+    endpoint de login usuario en back
+
+[33mcommit c80c5f299b2b2c129bc9a758575800a81aae4900[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Mon Apr 21 03:02:48 2025 -0400
+
+    Registro interactua con la bd
+
+[33mcommit 2691d648054bff1531126c08df808c93a4719c32[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 21:43:12 2025 -0400
+
+    context update + usecatalogs, pausa esperando a la araceli
+
+[33mcommit a2d474ead217b9a01a0fe124ac3f4977349fdf2a[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 21:23:58 2025 -0400
+
+    catalogos fix
+
+[33mcommit dffdc46639030e056c3fcc41acfada2fd43554a3[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 21:17:53 2025 -0400
+
+    catalogos + seed
+
+[33mcommit a68306b8384389285e354cb46383e3eda3dab217[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 20:28:09 2025 -0400
+
+    catalogos + perfil restricciones
+
+[33mcommit 37e5f0e12c4656c428e67a4cf2a04e1c599dd872[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 20:19:54 2025 -0400
+
+    ejercicio preferido
+
+[33mcommit f01db0239da826ec94956d377af0d96a623bd2dc[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 20:16:46 2025 -0400
+
+    seguimiento_rutina
+
+[33mcommit b42f4168e47e205e1f6e1bfe646cad25dc4e923e[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 20:13:38 2025 -0400
+
+    plan rutina usuario
+
+[33mcommit 10eba4dc265fad6bc323911a095f2e705942dd57[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 20:10:54 2025 -0400
+
+    seguimiento dieta
+
+[33mcommit c028dbcd4c62c3e22aa8c6a928ddbe0a5ea652b7[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 20:07:33 2025 -0400
+
+    plan dieta user
+
+[33mcommit d3ab1c84a357307122a4d9a64a9201c2a775aaae[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 20:04:42 2025 -0400
+
+    progreso user
+
+[33mcommit 49ea7e520374316f490846cbe648e88257ac5292[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 20:01:30 2025 -0400
+
+    alimentos evitados
+
+[33mcommit 1e282e83d8bf96e4fd8494fe03c9937ba9a3b6bd[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 19:58:21 2025 -0400
+
+    preferencias alimentarias
+
+[33mcommit 53f4c40bbe913dfc7e2cef6189dbbedac9c97e98[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 19:55:20 2025 -0400
+
+    historial medico
+
+[33mcommit 6d4fe1e728a1984c4782be840b271576e6368743[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 19:52:11 2025 -0400
+
+    habitos diarios
+
+[33mcommit 2efe908a230a4215ac57c75114f89fa2af05281d[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 19:48:33 2025 -0400
+
+    fix seguimiento_meta
+
+[33mcommit 2b914f9158401d85c9beead77b85b5aff4c69757[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 19:46:36 2025 -0400
+
+    seguimiento meta_usuario
+
+[33mcommit 086a303261977529186d1e8ceaf15a13ddc4289a[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 19:37:22 2025 -0400
+
+    No usaremos fastapi crudrouter por problemas, se hacen los archivos de perfil de usuario
+
+[33mcommit 962ed2dee1d4c91a8e08fcec4257f1801da6b1bf[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 19:11:58 2025 -0400
+
+     sqlacodegen setup + FastAPI CRUDRouter + pruebas de conexion
+
+[33mcommit c11a4ed00664e42877cf0a2b2ca2212ed11afa1d[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 18:44:13 2025 -0400
+
+    env listo
+
+[33mcommit a91e94b94dead9e5b83ff25b185829a401dee605[m
+Author: AdalParsifal <albertobustac@gmail.com>
+Date:   Sun Apr 20 18:24:40 2025 -0400
+
+    backend setup
+
+[33mcommit 7fdc18b060ac14aebb274a8986e865dcadd339d6[m
+Author: arapavez <ara.pavez@duocuc.cl>
+Date:   Sun Apr 20 01:05:46 2025 -0400
+
+    .
+
+[33mcommit ae28b72ed8ef1cf5ba000bfcb181e40564f7765f[m
+Merge: cbc3452 db12a7a
+Author: arapavez <128743300+arapavez@users.noreply.github.com>
+Date:   Sun Apr 20 00:15:38 2025 -0400
+
+    Merge pull request #1 from arapavez/register
+    
+    Frontend validaciones form
+
+[33mcommit db12a7acca0c75501bdfeef6a68325c74b98f946[m
+Author: arapavez <ara.pavez@duocuc.cl>
+Date:   Sat Apr 19 22:26:05 2025 -0400
+
+    Frontend validaciones form
+
+[33mcommit cbc3452894b1a5ae406ca61ad18e678fa39d4872[m
+Author: Fabián Solar <fa.solar@duocuc.cl>
+Date:   Fri Apr 18 20:22:28 2025 -0400
+
+    MVP+encuestas-EvolucionaT
+
+[33mcommit cb3a50e85349daacf94656db2276d05bea1809cf[m
+Author: Fabián Solar <fa.solar@duocuc.cl>
+Date:   Fri Apr 18 20:12:02 2025 -0400
+
+    Primeras fases del Proyecto -MVPl
+
+[33mcommit c03022a5b98621cde3e661fec198a99efdb8de54[m
+Author: henryscudder24 <164089356+henryscudder24@users.noreply.github.com>
+Date:   Fri Apr 18 19:52:34 2025 -0400
+
+    README.md
+
+[33mcommit aad9c7a41284493f4669ce1ed91526ebfa506834[m
+Author: henryscudder24 <164089356+henryscudder24@users.noreply.github.com>
+Date:   Fri Apr 18 19:50:49 2025 -0400
+
+    Initial commit

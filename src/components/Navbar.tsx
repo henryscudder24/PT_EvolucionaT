@@ -1,8 +1,16 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaInstagram, FaLinkedin } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
+import { useAuth } from '../context/AuthContext';
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-black border-b border-border">
       <div className="container mx-auto px-4">
@@ -15,14 +23,43 @@ const Navbar = () => {
 
           {/* Main Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-white hover:text-primary transition-colors">Inicio</Link>
-            <Link to="/about" className="text-white hover:text-primary transition-colors">Sobre Nosotros</Link>
-            <Link to="/services" className="text-white hover:text-primary transition-colors">Servicios</Link>
-            <Link to="/contact" className="text-white hover:text-primary transition-colors">Contacto</Link>
-
-            {/*Auth Links*/}
-            <Link to="/register" className="text-white hover:text-primary transition-colors">Registrase</Link>
-            <Link to="/login" className="text-white hover:text-primary transition-colors">Iniciar Sesión</Link>
+            {user ? (
+              <>
+                <Link to="/profile" className="text-gray-700 hover:text-primary">
+                  Mi Perfil
+                </Link>
+                <Link to="/survey" className="text-gray-700 hover:text-primary">
+                  Encuesta
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-700 hover:text-primary"
+                >
+                  Cerrar Sesión
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/about" className="text-gray-700 hover:text-primary">
+                  Sobre Nosotros
+                </Link>
+                <Link to="/services" className="text-gray-700 hover:text-primary">
+                  Servicios
+                </Link>
+                <Link to="/contact" className="text-gray-700 hover:text-primary">
+                  Contacto
+                </Link>
+                <Link to="/login" className="text-gray-700 hover:text-primary">
+                  Iniciar Sesión
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark"
+                >
+                  Registrarse
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Social Media Links */}

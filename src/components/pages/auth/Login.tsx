@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuth } from '../../../context/AuthContext';
 
 const loginSchema = z.object({
   email: z.string({
@@ -22,6 +23,8 @@ const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(loginSchema),
   });
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -43,13 +46,18 @@ const Login = () => {
         return;
       }
   
-      const user = await response.json();
-      console.log("✅ Usuario autenticado:", user);
-      alert(`Bienvenido, ${user.nombre}!`);
-  
+      const result = await response.json();
+      const { token, user } = result;
       
+      // Store token and user data
+      login(token, user);
+      
+      // Redirect to user profile
+      navigate('/profile');
+  
     } catch (err) {
       console.error("Error inesperado:", err);
+      alert("Ocurrió un error inesperado. Por favor intenta nuevamente.");
     }
   };
 
@@ -79,7 +87,7 @@ const Login = () => {
                 {...register('email')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
               />
-              {errors.email&& <p className="text-red-500 text-xs">{errors.email.message}</p>}
+              {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
@@ -89,7 +97,7 @@ const Login = () => {
                 {...register('password')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
               />
-              {errors.password&& <p className="text-red-500 text-xs">{errors.password.message}</p>}
+              {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
             </div>
             <button
               type="submit"
@@ -98,7 +106,7 @@ const Login = () => {
               Iniciar Sesión
             </button>
             <p className="text-sm text-center text-gray-500 mt-4">
-              ¿No tienes cuenta?{' '}
+              ¿No tienes una cuenta?{' '}
               <Link to="/register" className="text-primary hover:text-primary-dark">
                 Regístrate aquí
               </Link>

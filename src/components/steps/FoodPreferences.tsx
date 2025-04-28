@@ -1,173 +1,154 @@
-import type React from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { foodPreferencesSchema, FoodPreferencesData } from '../../validationSchemas';
 import { useSurvey } from '../../context/SurveyContext';
-import { FiCheck } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
 const FoodPreferences: React.FC = () => {
   const { surveyData, updateSurveyData } = useSurvey();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<FoodPreferencesData>({
+    resolver: zodResolver(foodPreferencesSchema),
+    defaultValues: {
+      tipoDieta: surveyData.foodPreferences.tipoDieta || [],
+      alergias: surveyData.foodPreferences.alergias || [],
+      alimentosEvitados: surveyData.foodPreferences.alimentosEvitados || [],
+      frecuenciaComida: surveyData.foodPreferences.frecuenciaComida || '',
+    },
+  });
 
-  // Manejar selección de opciones múltiples
-  const handleMultiSelect = (name: string, value: string) => {
-    const currentValues = surveyData[name as keyof typeof surveyData] as string[];
-
-    // Si es un array (como se espera)
-    if (Array.isArray(currentValues)) {
-      // Verificar si el valor ya está seleccionado
-      if (currentValues.includes(value)) {
-        // Si está seleccionado, eliminarlo
-        updateSurveyData({
-          [name]: currentValues.filter(item => item !== value)
-        });
-      } else {
-        // Si no está seleccionado, agregarlo
-        updateSurveyData({
-          [name]: [...currentValues, value]
-        });
-      }
-    }
-  };
-
-  // Manejar cambio de texto
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    updateSurveyData({ [name]: value });
-  };
-
-  // Verificar si una opción está seleccionada
-  const isSelected = (name: string, value: string) => {
-    const values = surveyData[name as keyof typeof surveyData];
-    return Array.isArray(values) && values.includes(value);
-  };
+  // Observar cambios en los campos y actualizar los datos
+  React.useEffect(() => {
+    const subscription = watch((value) => {
+      updateSurveyData({ foodPreferences: value as FoodPreferencesData });
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, updateSurveyData]);
 
   return (
-    <div className="survey-step">
-      <div className="survey-card">
-        <h2 className="survey-title">Preferencias Alimentarias</h2>
-        <p className="survey-subtitle">
-          Dinos tus preferencias alimentarias para crear un plan nutricional que disfrutes.
-        </p>
-
-        <div className="mb-6">
-          <img
-            src="/images/food/food-preferences.jpg"
-            alt="Preferencias Alimentarias"
-            className="w-full max-h-48 object-contain rounded-lg mb-4"
-          />
-        </div>
-
-        {/* Tipo de dieta */}
-        <div className="mb-8">
-          <h3 className="survey-question">Tipo de dieta específica</h3>
-          <p className="text-sm text-muted-foreground mb-4">Selecciona todas las que apliquen</p>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {['Omnívora', 'Vegetariana', 'Vegana', 'Keto', 'Mediterránea', 'Paleo'].map((diet) => (
-              <div
-                key={`diet-${diet}`}
-                className={`survey-visual-option ${
-                  isSelected('dietType', diet.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleMultiSelect('dietType', diet.toLowerCase())}
-              >
-                {isSelected('dietType', diet.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{diet}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Restricciones o alergias */}
-        <div className="mb-8">
-          <h3 className="survey-question">Restricciones o alergias alimentarias</h3>
-          <p className="text-sm text-muted-foreground mb-4">Selecciona todas las que apliquen</p>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {['Gluten', 'Lácteos', 'Frutos secos', 'Mariscos', 'Soya', 'Huevo'].map((allergy) => (
-              <div
-                key={`allergy-${allergy}`}
-                className={`survey-visual-option ${
-                  isSelected('allergies', allergy.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleMultiSelect('allergies', allergy.toLowerCase())}
-              >
-                {isSelected('allergies', allergy.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{allergy}</span>
-              </div>
-            ))}
-
-            <div
-              className={`survey-visual-option ${
-                isSelected('allergies', 'ninguna') ? 'survey-visual-option-selected' : ''
-              }`}
-              onClick={() => {
-                // Si se selecciona "Ninguna", se borran todas las demás opciones
-                if (!isSelected('allergies', 'ninguna')) {
-                  updateSurveyData({ allergies: ['ninguna'] });
-                } else {
-                  updateSurveyData({ allergies: [] });
-                }
-              }}
-            >
-              {isSelected('allergies', 'ninguna') && (
-                <span className="text-primary">
-                  <FiCheck size={18} />
-                </span>
-              )}
-              <span>Ninguna</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Comidas favoritas */}
-        <div className="mb-8">
-          <h3 className="survey-question">Comidas favoritas</h3>
-          <p className="text-sm text-muted-foreground mb-4">Selecciona todas las que apliquen</p>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              'Carnes', 'Pollo', 'Pescados', 'Verduras', 'Frutas',
-              'Pastas', 'Arroz', 'Legumbres', 'Lácteos', 'Snacks saludables'
-            ].map((food) => (
-              <div
-                key={`food-${food}`}
-                className={`survey-visual-option ${
-                  isSelected('favoriteFoods', food.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleMultiSelect('favoriteFoods', food.toLowerCase())}
-              >
-                {isSelected('favoriteFoods', food.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{food}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Alimentos a evitar */}
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg"
+    >
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Preferencias Alimentarias</h2>
+      <form className="space-y-6">
         <div>
-          <h3 className="survey-question">Alimentos a evitar</h3>
-          <p className="text-sm text-muted-foreground mb-4">Menciona alimentos específicos que prefieres evitar</p>
-
-          <textarea
-            name="foodsToAvoid"
-            value={surveyData.foodsToAvoid}
-            onChange={handleTextChange}
-            className="survey-input min-h-[100px]"
-            placeholder="Ej: Comida picante, brócoli, berenjenas..."
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Tipo de dieta
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              'Vegetariana',
+              'Vegana',
+              'Omnívora',
+              'Paleo',
+              'Keto',
+              'Mediterránea',
+              'Ninguna específica',
+            ].map((dieta) => (
+              <label key={dieta} className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  value={dieta}
+                  {...register('tipoDieta')}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="text-gray-700">{dieta}</span>
+              </label>
+            ))}
+          </div>
+          {errors.tipoDieta && (
+            <p className="mt-1 text-sm text-red-600">{errors.tipoDieta.message}</p>
+          )}
         </div>
-      </div>
-    </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Alergias alimentarias
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              'Lácteos',
+              'Gluten',
+              'Frutos secos',
+              'Mariscos',
+              'Huevos',
+              'Soja',
+              'Ninguna',
+            ].map((alergia) => (
+              <label key={alergia} className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  value={alergia}
+                  {...register('alergias')}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="text-gray-700">{alergia}</span>
+              </label>
+            ))}
+          </div>
+          {errors.alergias && (
+            <p className="mt-1 text-sm text-red-600">{errors.alergias.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Alimentos que prefieres evitar
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              'Azúcar',
+              'Grasas saturadas',
+              'Carbohidratos',
+              'Carnes rojas',
+              'Alimentos procesados',
+              'Ninguno',
+            ].map((alimento) => (
+              <label key={alimento} className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  value={alimento}
+                  {...register('alimentosEvitados')}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="text-gray-700">{alimento}</span>
+              </label>
+            ))}
+          </div>
+          {errors.alimentosEvitados && (
+            <p className="mt-1 text-sm text-red-600">{errors.alimentosEvitados.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Frecuencia de comidas al día
+          </label>
+          <select
+            {...register('frecuenciaComida')}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Selecciona una opción</option>
+            <option value="3">3 comidas principales</option>
+            <option value="4">3 comidas principales + 1 snack</option>
+            <option value="5">3 comidas principales + 2 snacks</option>
+            <option value="6">6 comidas pequeñas</option>
+            <option value="variable">Variable según el día</option>
+          </select>
+          {errors.frecuenciaComida && (
+            <p className="mt-1 text-sm text-red-600">{errors.frecuenciaComida.message}</p>
+          )}
+        </div>
+      </form>
+    </motion.div>
   );
 };
 

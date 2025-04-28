@@ -1,280 +1,351 @@
-import type React from 'react';
-import { useSurvey } from '../../context/SurveyContext';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { motion } from 'framer-motion';
 import { FiCheck } from 'react-icons/fi';
+import { dailyHabitsSchema, type DailyHabitsData } from '../../validationSchemas';
+import { useSurvey } from '../../context/SurveyContext';
+import { toast } from 'react-hot-toast';
 
 const DailyHabits: React.FC = () => {
-  const { surveyData, updateSurveyData } = useSurvey();
+  const { surveyData, updateSurveyData, nextStep, prevStep } = useSurvey();
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<DailyHabitsData>({
+    resolver: zodResolver(dailyHabitsSchema),
+    defaultValues: {
+      sleepSchedule: surveyData.dailyHabits?.sleepSchedule || '',
+      stressLevel: surveyData.dailyHabits?.stressLevel || '',
+      workSchedule: surveyData.dailyHabits?.workSchedule || '',
+      dietaryRestrictions: surveyData.dailyHabits?.dietaryRestrictions || [],
+      mealPreparationTime: surveyData.dailyHabits?.mealPreparationTime || '',
+      snackingHabits: surveyData.dailyHabits?.snackingHabits || '',
+      waterIntake: surveyData.dailyHabits?.waterIntake || ''
+    }
+  });
 
-  // Manejar la selección única
-  const handleSingleSelect = (name: string, value: string) => {
-    updateSurveyData({ [name]: value });
-  };
-
-  // Verificar si una opción está seleccionada
-  const isSelected = (name: string, value: string) => {
-    const values = surveyData[name as keyof typeof surveyData];
-    return values === value;
+  const onSubmit = (data: DailyHabitsData) => {
+    updateSurveyData({ dailyHabits: data });
+    nextStep();
+    toast.success('Hábitos diarios guardados');
   };
 
   return (
-    <div className="survey-step">
-      <div className="survey-card">
-        <h2 className="survey-title">Hábitos Diarios</h2>
-        <p className="survey-subtitle">
-          Tus hábitos diarios tienen un gran impacto en tu salud y bienestar general.
-          Esta información nos ayudará a personalizar aún más tus recomendaciones.
-        </p>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-6"
+    >
+      <h2 className="text-2xl font-bold text-gray-900">Hábitos Diarios</h2>
+      <p className="text-gray-600">
+        Tus hábitos diarios tienen un gran impacto en tu salud y bienestar general.
+        Esta información nos ayudará a personalizar aún más tus recomendaciones.
+      </p>
 
-        <div className="mb-6">
-          <img
-            src="/images/personal/daily-habits.jpg"
-            alt="Hábitos Diarios"
-            className="w-full max-h-48 object-contain rounded-lg mb-4"
-          />
-        </div>
-
-        {/* Horas de sueño */}
-        <div className="mb-8">
-          <h3 className="survey-question">¿Cuántas horas sueles dormir por noche?</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Horario de sueño */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            ¿Cuál es tu horario habitual de sueño?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
             {[
-              'Menos de 6 horas',
-              '6-7 horas',
-              '7-8 horas',
-              '8-9 horas',
-              'Más de 9 horas'
-            ].map((hours) => (
-              <div
-                key={`sleep-${hours}`}
-                className={`survey-visual-option ${
-                  isSelected('sleepHours', hours.toLowerCase()) ? 'survey-visual-option-selected' : ''
+              'Temprano (21:00-05:00)',
+              'Normal (22:00-06:00)',
+              'Tarde (23:00-07:00)',
+              'Muy tarde (00:00-08:00)',
+              'Irregular'
+            ].map((schedule) => (
+              <label
+                key={`sleep-${schedule}`}
+                className={`relative flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                  watch('sleepSchedule') === schedule
+                    ? 'border-indigo-500 bg-indigo-50'
+                    : 'border-gray-300 hover:border-indigo-300'
                 }`}
-                onClick={() => handleSingleSelect('sleepHours', hours.toLowerCase())}
               >
-                {isSelected('sleepHours', hours.toLowerCase()) && (
-                  <span className="text-primary">
+                <input
+                  type="radio"
+                  value={schedule}
+                  {...register('sleepSchedule')}
+                  className="sr-only"
+                />
+                {watch('sleepSchedule') === schedule && (
+                  <span className="absolute top-1 right-1 text-indigo-600">
                     <FiCheck size={18} />
                   </span>
                 )}
-                <span>{hours}</span>
-              </div>
+                <span className="text-sm">{schedule}</span>
+              </label>
             ))}
           </div>
-        </div>
-
-        {/* Calidad del sueño */}
-        <div className="mb-8">
-          <h3 className="survey-question">¿Cómo calificarías la calidad de tu sueño?</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-            {[
-              'Excelente',
-              'Buena',
-              'Regular',
-              'Mala',
-              'Muy mala'
-            ].map((quality) => (
-              <div
-                key={`sleep-quality-${quality}`}
-                className={`survey-visual-option ${
-                  isSelected('sleepQuality', quality.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleSingleSelect('sleepQuality', quality.toLowerCase())}
-              >
-                {isSelected('sleepQuality', quality.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{quality}</span>
-              </div>
-            ))}
-          </div>
+          {errors.sleepSchedule && (
+            <p className="mt-1 text-sm text-red-600">{errors.sleepSchedule.message}</p>
+          )}
         </div>
 
         {/* Nivel de estrés */}
-        <div className="mb-8">
-          <h3 className="survey-question">¿Cómo describirías tu nivel habitual de estrés?</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            ¿Cómo describirías tu nivel habitual de estrés?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
             {[
-              'Muy bajo',
               'Bajo',
               'Moderado',
               'Alto',
-              'Muy alto'
+              'Muy alto',
+              'Variable'
             ].map((stress) => (
-              <div
+              <label
                 key={`stress-${stress}`}
-                className={`survey-visual-option ${
-                  isSelected('stressLevel', stress.toLowerCase()) ? 'survey-visual-option-selected' : ''
+                className={`relative flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                  watch('stressLevel') === stress
+                    ? 'border-indigo-500 bg-indigo-50'
+                    : 'border-gray-300 hover:border-indigo-300'
                 }`}
-                onClick={() => handleSingleSelect('stressLevel', stress.toLowerCase())}
               >
-                {isSelected('stressLevel', stress.toLowerCase()) && (
-                  <span className="text-primary">
+                <input
+                  type="radio"
+                  value={stress}
+                  {...register('stressLevel')}
+                  className="sr-only"
+                />
+                {watch('stressLevel') === stress && (
+                  <span className="absolute top-1 right-1 text-indigo-600">
                     <FiCheck size={18} />
                   </span>
                 )}
-                <span>{stress}</span>
-              </div>
+                <span className="text-sm">{stress}</span>
+              </label>
             ))}
           </div>
+          {errors.stressLevel && (
+            <p className="mt-1 text-sm text-red-600">{errors.stressLevel.message}</p>
+          )}
         </div>
 
-        {/* Ingesta de agua */}
-        <div className="mb-8">
-          <h3 className="survey-question">¿Cuánta agua bebes diariamente?</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+        {/* Horario de trabajo */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            ¿Cuál es tu horario de trabajo habitual?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
             {[
-              'Menos de 1 litro',
-              '1-1.5 litros',
-              '1.5-2 litros',
-              '2-3 litros',
-              'Más de 3 litros'
-            ].map((water) => (
-              <div
-                key={`water-${water}`}
-                className={`survey-visual-option ${
-                  isSelected('waterIntake', water.toLowerCase()) ? 'survey-visual-option-selected' : ''
+              'Tiempo completo (9-5)',
+              'Medio tiempo',
+              'Turnos rotativos',
+              'Trabajo remoto',
+              'Horario flexible',
+              'No trabajo actualmente'
+            ].map((schedule) => (
+              <label
+                key={`work-${schedule}`}
+                className={`relative flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                  watch('workSchedule') === schedule
+                    ? 'border-indigo-500 bg-indigo-50'
+                    : 'border-gray-300 hover:border-indigo-300'
                 }`}
-                onClick={() => handleSingleSelect('waterIntake', water.toLowerCase())}
               >
-                {isSelected('waterIntake', water.toLowerCase()) && (
-                  <span className="text-primary">
+                <input
+                  type="radio"
+                  value={schedule}
+                  {...register('workSchedule')}
+                  className="sr-only"
+                />
+                {watch('workSchedule') === schedule && (
+                  <span className="absolute top-1 right-1 text-indigo-600">
                     <FiCheck size={18} />
                   </span>
                 )}
-                <span>{water}</span>
-              </div>
+                <span className="text-sm">{schedule}</span>
+              </label>
             ))}
           </div>
+          {errors.workSchedule && (
+            <p className="mt-1 text-sm text-red-600">{errors.workSchedule.message}</p>
+          )}
         </div>
 
-        {/* Frecuencia de comidas */}
-        <div className="mb-8">
-          <h3 className="survey-question">¿Cuántas comidas principales haces al día?</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+        {/* Tiempo para preparar comidas */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            ¿Cuánto tiempo sueles dedicar a preparar tus comidas?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
             {[
-              '1-2 comidas',
-              '3 comidas',
-              '4-5 comidas',
-              '6 o más comidas'
-            ].map((frequency) => (
-              <div
-                key={`meal-${frequency}`}
-                className={`survey-visual-option ${
-                  isSelected('mealFrequency', frequency.toLowerCase()) ? 'survey-visual-option-selected' : ''
+              'Menos de 15 minutos',
+              '15-30 minutos',
+              '30-60 minutos',
+              'Más de 60 minutos'
+            ].map((time) => (
+              <label
+                key={`prep-${time}`}
+                className={`relative flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                  watch('mealPreparationTime') === time
+                    ? 'border-indigo-500 bg-indigo-50'
+                    : 'border-gray-300 hover:border-indigo-300'
                 }`}
-                onClick={() => handleSingleSelect('mealFrequency', frequency.toLowerCase())}
               >
-                {isSelected('mealFrequency', frequency.toLowerCase()) && (
-                  <span className="text-primary">
+                <input
+                  type="radio"
+                  value={time}
+                  {...register('mealPreparationTime')}
+                  className="sr-only"
+                />
+                {watch('mealPreparationTime') === time && (
+                  <span className="absolute top-1 right-1 text-indigo-600">
                     <FiCheck size={18} />
                   </span>
                 )}
-                <span>{frequency}</span>
-              </div>
+                <span className="text-sm">{time}</span>
+              </label>
             ))}
           </div>
+          {errors.mealPreparationTime && (
+            <p className="mt-1 text-sm text-red-600">{errors.mealPreparationTime.message}</p>
+          )}
         </div>
 
         {/* Hábitos de snacking */}
-        <div className="mb-8">
-          <h3 className="survey-question">¿Con qué frecuencia consumes snacks entre comidas?</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-            {[
-              'Nunca o rara vez',
-              'Ocasionalmente',
-              'Regularmente (1-2 veces al día)',
-              'Frecuentemente (3 o más veces al día)'
-            ].map((habit) => (
-              <div
-                key={`snack-${habit}`}
-                className={`survey-visual-option ${
-                  isSelected('snackingHabits', habit.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleSingleSelect('snackingHabits', habit.toLowerCase())}
-              >
-                {isSelected('snackingHabits', habit.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{habit}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Tiempo frente a pantallas */}
-        <div className="mb-8">
-          <h3 className="survey-question">¿Cuánto tiempo pasas frente a pantallas diariamente?</h3>
-          <p className="text-sm text-muted-foreground mb-2">Incluyendo teléfono, computadora, televisión, etc.</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-            {[
-              'Menos de 2 horas',
-              '2-4 horas',
-              '4-6 horas',
-              '6-8 horas',
-              'Más de 8 horas'
-            ].map((time) => (
-              <div
-                key={`screen-${time}`}
-                className={`survey-visual-option ${
-                  isSelected('screenTime', time.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleSingleSelect('screenTime', time.toLowerCase())}
-              >
-                {isSelected('screenTime', time.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{time}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Tipo de trabajo */}
         <div>
-          <h3 className="survey-question">¿Qué tipo de trabajo realizas la mayor parte del tiempo?</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+          <label className="block text-sm font-medium text-gray-700">
+            ¿Con qué frecuencia consumes snacks entre comidas?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
             {[
-              'Sedentario (sentado la mayor parte del tiempo)',
-              'Ligeramente activo (mayormente de pie)',
-              'Moderadamente activo (caminando frecuentemente)',
-              'Muy activo (trabajo físico constante)'
-            ].map((work) => (
-              <div
-                key={`work-${work}`}
-                className={`survey-visual-option ${
-                  isSelected('workType', work.toLowerCase()) ? 'survey-visual-option-selected' : ''
+              'Nunca',
+              'Ocasionalmente',
+              'Regularmente',
+              'Frecuentemente'
+            ].map((frequency) => (
+              <label
+                key={`snack-${frequency}`}
+                className={`relative flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                  watch('snackingHabits') === frequency
+                    ? 'border-indigo-500 bg-indigo-50'
+                    : 'border-gray-300 hover:border-indigo-300'
                 }`}
-                onClick={() => handleSingleSelect('workType', work.toLowerCase())}
               >
-                {isSelected('workType', work.toLowerCase()) && (
-                  <span className="text-primary">
+                <input
+                  type="radio"
+                  value={frequency}
+                  {...register('snackingHabits')}
+                  className="sr-only"
+                />
+                {watch('snackingHabits') === frequency && (
+                  <span className="absolute top-1 right-1 text-indigo-600">
                     <FiCheck size={18} />
                   </span>
                 )}
-                <span>{work}</span>
-              </div>
+                <span className="text-sm">{frequency}</span>
+              </label>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground mt-4">
-            Adaptar tus recomendaciones según tu rutina laboral es clave para lograr un equilibrio sostenible.
-          </p>
+          {errors.snackingHabits && (
+            <p className="mt-1 text-sm text-red-600">{errors.snackingHabits.message}</p>
+          )}
         </div>
-      </div>
-    </div>
+
+        {/* Consumo de agua */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            ¿Cuánta agua bebes diariamente?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+            {[
+              'Menos de 1 litro',
+              '1-2 litros',
+              '2-3 litros',
+              'Más de 3 litros'
+            ].map((water) => (
+              <label
+                key={`water-${water}`}
+                className={`relative flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                  watch('waterIntake') === water
+                    ? 'border-indigo-500 bg-indigo-50'
+                    : 'border-gray-300 hover:border-indigo-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  value={water}
+                  {...register('waterIntake')}
+                  className="sr-only"
+                />
+                {watch('waterIntake') === water && (
+                  <span className="absolute top-1 right-1 text-indigo-600">
+                    <FiCheck size={18} />
+                  </span>
+                )}
+                <span className="text-sm">{water}</span>
+              </label>
+            ))}
+          </div>
+          {errors.waterIntake && (
+            <p className="mt-1 text-sm text-red-600">{errors.waterIntake.message}</p>
+          )}
+        </div>
+
+        {/* Restricciones dietéticas */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            ¿Tienes alguna restricción dietética?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+            {[
+              'Vegetariano',
+              'Vegano',
+              'Sin gluten',
+              'Sin lácteos',
+              'Sin azúcar',
+              'Bajo en carbohidratos',
+              'Ninguna'
+            ].map((restriction) => (
+              <label
+                key={`diet-${restriction}`}
+                className={`relative flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                  watch('dietaryRestrictions')?.includes(restriction)
+                    ? 'border-indigo-500 bg-indigo-50'
+                    : 'border-gray-300 hover:border-indigo-300'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  value={restriction}
+                  {...register('dietaryRestrictions')}
+                  className="sr-only"
+                />
+                {watch('dietaryRestrictions')?.includes(restriction) && (
+                  <span className="absolute top-1 right-1 text-indigo-600">
+                    <FiCheck size={18} />
+                  </span>
+                )}
+                <span className="text-sm">{restriction}</span>
+              </label>
+            ))}
+          </div>
+          {errors.dietaryRestrictions && (
+            <p className="mt-1 text-sm text-red-600">{errors.dietaryRestrictions.message}</p>
+          )}
+        </div>
+
+        <div className="flex justify-between">
+          <button
+            type="button"
+            onClick={prevStep}
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Atrás
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Siguiente
+          </button>
+        </div>
+      </form>
+    </motion.div>
   );
 };
 

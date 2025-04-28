@@ -12,23 +12,20 @@ import DailyHabits from '../steps/DailyHabits';
 import Completion from '../steps/Completion';
 
 const Survey: React.FC = () => {
-  const { currentStep, totalSteps, goToNextStep, goToPreviousStep } = useSurvey();
+  const { currentStep, totalSteps, nextStep, prevStep, isLastStep, finishSurvey } = useSurvey();
   const navigate = useNavigate();
 
   const handleNext = () => {
-    if (currentStep < totalSteps) {
-      goToNextStep();
+    if (isLastStep) {
+      finishSurvey();
+      navigate('/dashboard');
     } else {
-      // Aquí podrías guardar los datos o mostrar un mensaje de éxito
-      alert('¡Encuesta completada!');
-      navigate('/');
+      nextStep();
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      goToPreviousStep();
-    }
+    prevStep();
   };
 
   const renderCurrentStep = () => {
@@ -45,6 +42,8 @@ const Survey: React.FC = () => {
         return <MedicalHistory />;
       case 6:
         return <DailyHabits />;
+      case 7:
+        return <Completion />;
       default:
         return <PersonalInfo />;
     }

@@ -1,214 +1,158 @@
-import type React from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { fitnessLevelSchema, type FitnessLevelData } from '../../validationSchemas';
 import { useSurvey } from '../../context/SurveyContext';
+import { motion } from 'framer-motion';
 import { FiCheck } from 'react-icons/fi';
 
 const FitnessLevel: React.FC = () => {
   const { surveyData, updateSurveyData } = useSurvey();
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<FitnessLevelData>({
+    resolver: zodResolver(fitnessLevelSchema),
+    defaultValues: {
+      exerciseFrequency: surveyData.fitnessLevel?.exerciseFrequency || '',
+      exerciseType: surveyData.fitnessLevel?.exerciseType || [],
+      availableEquipment: surveyData.fitnessLevel?.availableEquipment || [],
+      availableTime: surveyData.fitnessLevel?.availableTime || '',
+      medicalConditions: surveyData.fitnessLevel?.medicalConditions || '',
+    },
+  });
 
-  // Manejar la selección única
-  const handleSingleSelect = (name: string, value: string) => {
-    updateSurveyData({ [name]: value });
-  };
-
-  // Manejar selección múltiple
-  const handleMultiSelect = (name: string, value: string) => {
-    const currentValues = surveyData[name as keyof typeof surveyData] as string[];
-
-    if (Array.isArray(currentValues)) {
-      if (currentValues.includes(value)) {
-        updateSurveyData({
-          [name]: currentValues.filter(item => item !== value)
-        });
-      } else {
-        updateSurveyData({
-          [name]: [...currentValues, value]
-        });
-      }
-    }
-  };
-
-  // Verificar si una opción está seleccionada
-  const isSelected = (name: string, value: string) => {
-    const values = surveyData[name as keyof typeof surveyData];
-    return values === value || (Array.isArray(values) && values.includes(value));
-  };
-
-  // Manejar cambio de texto
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    updateSurveyData({ [name]: value });
-  };
+  // Observar cambios en los campos y actualizar los datos
+  React.useEffect(() => {
+    const subscription = watch((value) => {
+      updateSurveyData({ fitnessLevel: value as FitnessLevelData });
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, updateSurveyData]);
 
   return (
-    <div className="survey-step">
-      <div className="survey-card">
-        <h2 className="survey-title">Nivel de Condición Física y Entrenamiento</h2>
-        <p className="survey-subtitle">
-          Esta información nos ayuda a crear un plan de entrenamiento adecuado a tu nivel y recursos.
-        </p>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-6"
+    >
+      <h2 className="text-2xl font-semibold mb-6">Nivel de Actividad Física</h2>
 
-        <div className="mb-6">
-          <img
-            src="/images/fitness/training-levels.jpg"
-            alt="Nivel de Condición Física"
-            className="w-full max-h-48 object-contain rounded-lg mb-4"
-          />
+      <form className="space-y-6">
+        {/* Frecuencia de ejercicio */}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium">
+            ¿Con qué frecuencia realizas ejercicio?
+          </label>
+          <select
+            {...register('exerciseFrequency')}
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="">Selecciona una opción</option>
+            <option value="nunca">Nunca</option>
+            <option value="ocasional">Ocasionalmente</option>
+            <option value="1-2-semana">1-2 veces por semana</option>
+            <option value="3-4-semana">3-4 veces por semana</option>
+            <option value="5+-semana">5 o más veces por semana</option>
+          </select>
+          {errors.exerciseFrequency && (
+            <p className="text-red-500 text-sm">{errors.exerciseFrequency.message}</p>
+          )}
         </div>
 
-        {/* Frecuencia de ejercicio actual */}
-        <div className="mb-8">
-          <h3 className="survey-question">Frecuencia de ejercicio actual</h3>
-          <p className="text-sm text-muted-foreground mb-4">¿Con qué frecuencia haces ejercicio actualmente?</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Tipos de ejercicio */}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium">
+            ¿Qué tipos de ejercicio prefieres? (Selecciona todos los que apliquen)
+          </label>
+          <div className="grid grid-cols-2 gap-4">
             {[
-              'Nunca o casi nunca',
-              '1-2 días por semana',
-              '3-4 días por semana',
-              '5 o más días por semana'
-            ].map((frequency) => (
-              <div
-                key={`frequency-${frequency}`}
-                className={`survey-visual-option ${
-                  isSelected('exerciseFrequency', frequency.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleSingleSelect('exerciseFrequency', frequency.toLowerCase())}
-              >
-                {isSelected('exerciseFrequency', frequency.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{frequency}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Tipo de ejercicio preferido */}
-        <div className="mb-8">
-          <h3 className="survey-question">Tipo de ejercicio preferido</h3>
-          <p className="text-sm text-muted-foreground mb-4">Selecciona todas las opciones que te gusten</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              'Gimnasio con pesas',
-              'Cardio (correr, bici, etc.)',
-              'CrossFit',
-              'Ejercicios en casa',
-              'Calistenia',
-              'Yoga/Pilates',
-              'Deportes de equipo',
-              'Natación',
-              'HIIT',
-              'Entrenamiento funcional',
-              'Baile/Zumba',
-              'Otro'
+              'cardio',
+              'pesas',
+              'yoga',
+              'pilates',
+              'natacion',
+              'deportes-equipo',
+              'artes-marciales',
+              'baile'
             ].map((type) => (
-              <div
-                key={`type-${type}`}
-                className={`survey-visual-option ${
-                  isSelected('exerciseType', type.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleMultiSelect('exerciseType', type.toLowerCase())}
-              >
-                {isSelected('exerciseType', type.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{type}</span>
-              </div>
+              <label key={type} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  value={type}
+                  {...register('exerciseType')}
+                  className="rounded"
+                />
+                <span>{type.replace('-', ' ').charAt(0).toUpperCase() + type.slice(1)}</span>
+              </label>
             ))}
           </div>
+          {errors.exerciseType && (
+            <p className="text-red-500 text-sm">{errors.exerciseType.message}</p>
+          )}
         </div>
 
-        {/* Equipamiento disponible */}
-        <div className="mb-8">
-          <h3 className="survey-question">Equipamiento disponible</h3>
-          <p className="text-sm text-muted-foreground mb-4">Selecciona todo el equipamiento que tienes disponible</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        {/* Equipo disponible */}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium">
+            ¿Qué equipo tienes disponible? (Selecciona todos los que apliquen)
+          </label>
+          <div className="grid grid-cols-2 gap-4">
             {[
-              'Sin equipamiento',
-              'Mancuernas',
-              'Barras',
-              'Máquinas',
-              'Bandas elásticas',
-              'TRX/Suspensión',
-              'Bicicleta',
-              'Cinta de correr',
-              'Kettlebells',
-              'Balón medicinal',
-              'Banco de pesas',
-              'Step'
+              'pesas',
+              'bandas',
+              'maquinas',
+              'bicicleta',
+              'caminadora',
+              'colchoneta',
+              'ninguno'
             ].map((equipment) => (
-              <div
-                key={`equipment-${equipment}`}
-                className={`survey-visual-option ${
-                  isSelected('availableEquipment', equipment.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleMultiSelect('availableEquipment', equipment.toLowerCase())}
-              >
-                {isSelected('availableEquipment', equipment.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{equipment}</span>
-              </div>
+              <label key={equipment} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  value={equipment}
+                  {...register('availableEquipment')}
+                  className="rounded"
+                />
+                <span>{equipment.charAt(0).toUpperCase() + equipment.slice(1)}</span>
+              </label>
             ))}
           </div>
         </div>
 
-        {/* Tiempo diario disponible */}
-        <div className="mb-8">
-          <h3 className="survey-question">Tiempo diario disponible para entrenamiento</h3>
-          <p className="text-sm text-muted-foreground mb-4">¿Cuánto tiempo puedes dedicar al ejercicio por sesión?</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              'Menos de 30 minutos',
-              '30-45 minutos',
-              '45-60 minutos',
-              'Más de 60 minutos'
-            ].map((time) => (
-              <div
-                key={`time-${time}`}
-                className={`survey-visual-option ${
-                  isSelected('availableTime', time.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleSingleSelect('availableTime', time.toLowerCase())}
-              >
-                {isSelected('availableTime', time.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{time}</span>
-              </div>
-            ))}
-          </div>
+        {/* Tiempo disponible */}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium">
+            ¿Cuánto tiempo puedes dedicar al ejercicio por sesión?
+          </label>
+          <select
+            {...register('availableTime')}
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="">Selecciona una opción</option>
+            <option value="15-min">15 minutos</option>
+            <option value="30-min">30 minutos</option>
+            <option value="45-min">45 minutos</option>
+            <option value="60-min">1 hora</option>
+            <option value="90-min">1.5 horas</option>
+            <option value="120-min">2 horas o más</option>
+          </select>
+          {errors.availableTime && (
+            <p className="text-red-500 text-sm">{errors.availableTime.message}</p>
+          )}
         </div>
 
-        {/* Lesiones o condiciones médicas */}
-        <div>
-          <h3 className="survey-question">Lesiones o condiciones médicas previas</h3>
-          <p className="text-sm text-muted-foreground mb-4">Menciona cualquier lesión o condición médica que debamos tener en cuenta</p>
-
+        {/* Condiciones médicas */}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium">
+            ¿Tienes alguna condición médica que afecte tu actividad física?
+          </label>
           <textarea
-            name="medicalConditions"
-            value={surveyData.medicalConditions}
-            onChange={handleTextChange}
-            className="survey-input min-h-[100px]"
-            placeholder="Ej: Lesión de rodilla, problemas de espalda, hipertensión..."
+            {...register('medicalConditions')}
+            className="w-full p-2 border rounded-md h-24"
+            placeholder="Describe cualquier condición médica relevante..."
           />
-          <p className="text-xs text-muted-foreground mt-2">
-            Esta información es importante para adaptar los ejercicios a tus necesidades específicas.
-          </p>
         </div>
-      </div>
-    </div>
+      </form>
+    </motion.div>
   );
 };
 

@@ -1,201 +1,129 @@
-import type React from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { goalsObjectivesSchema, type GoalsObjectivesData } from '../../validationSchemas';
 import { useSurvey } from '../../context/SurveyContext';
+import { motion } from 'framer-motion';
 import { FiCheck } from 'react-icons/fi';
 
-const GoalsObjectives: React.FC = () => {
+const GoalsObjectives = () => {
   const { surveyData, updateSurveyData } = useSurvey();
+  const { register, handleSubmit, formState: { errors } } = useForm<GoalsObjectivesData>({
+    resolver: zodResolver(goalsObjectivesSchema),
+    defaultValues: {
+      mainGoal: surveyData.goalsObjectives?.mainGoal || '',
+      timeframe: surveyData.goalsObjectives?.timeframe || '',
+      commitmentLevel: surveyData.goalsObjectives?.commitmentLevel || 3,
+      measurementPreference: surveyData.goalsObjectives?.measurementPreference || [],
+    },
+  });
 
-  // Manejar la selección de una opción única
-  const handleSingleSelect = (name: string, value: string) => {
-    updateSurveyData({ [name]: value });
-  };
-
-  // Manejar selección de opciones múltiples
-  const handleMultiSelect = (name: string, value: string) => {
-    const currentValues = surveyData[name as keyof typeof surveyData] as string[];
-
-    if (Array.isArray(currentValues)) {
-      if (currentValues.includes(value)) {
-        updateSurveyData({
-          [name]: currentValues.filter(item => item !== value)
-        });
-      } else {
-        updateSurveyData({
-          [name]: [...currentValues, value]
-        });
-      }
-    }
-  };
-
-  // Verificar si una opción está seleccionada
-  const isSelected = (name: string, value: string) => {
-    const values = surveyData[name as keyof typeof surveyData];
-    return values === value || (Array.isArray(values) && values.includes(value));
-  };
-
-  // Manejar el cambio del nivel de compromiso
-  const handleCommitmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number.parseInt(e.target.value);
-    updateSurveyData({ commitmentLevel: value });
-  };
-
-  // Descripción del nivel de compromiso
-  const getCommitmentDescription = () => {
-    switch (surveyData.commitmentLevel) {
-      case 1:
-        return "Mínimo: Pequeños cambios graduales";
-      case 2:
-        return "Bajo: Cambios moderados, flexible";
-      case 3:
-        return "Medio: Balanceado y constante";
-      case 4:
-        return "Alto: Disciplinado, resultados rápidos";
-      case 5:
-        return "Extremo: Compromiso total y riguroso";
-      default:
-        return "Medio: Balanceado y constante";
-    }
+  const onSubmit = (data: GoalsObjectivesData) => {
+    updateSurveyData({ goalsObjectives: data });
   };
 
   return (
-    <div className="survey-step">
-      <div className="survey-card">
-        <h2 className="survey-title">Metas y Objetivos</h2>
-        <p className="survey-subtitle">
-          Define tus objetivos para que podamos crear un plan específico para tus necesidades.
-        </p>
-
-        <div className="mb-6">
-          <img
-            src="/images/goals/fitness-goals.jpg"
-            alt="Metas y Objetivos"
-            className="w-full max-h-48 object-contain rounded-lg mb-4"
-          />
-        </div>
-
-        {/* Objetivo físico principal */}
-        <div className="mb-8">
-          <h3 className="survey-question">Objetivo físico principal</h3>
-          <p className="text-sm text-muted-foreground mb-4">Selecciona tu principal objetivo</p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              'Perder grasa',
-              'Ganar músculo',
-              'Mejorar resistencia cardiovascular',
-              'Mejorar salud general',
-              'Ganar fuerza',
-              'Mejorar flexibilidad'
-            ].map((goal) => (
-              <div
-                key={`goal-${goal}`}
-                className={`survey-visual-option ${
-                  isSelected('mainGoal', goal.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleSingleSelect('mainGoal', goal.toLowerCase())}
-              >
-                {isSelected('mainGoal', goal.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{goal}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Tiempo estimado */}
-        <div className="mb-8">
-          <h3 className="survey-question">Tiempo estimado para alcanzar la meta</h3>
-          <p className="text-sm text-muted-foreground mb-4">¿En cuánto tiempo te gustaría alcanzar resultados significativos?</p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              '1-3 meses',
-              '4-6 meses',
-              '7-12 meses',
-              'Más de un año'
-            ].map((time) => (
-              <div
-                key={`time-${time}`}
-                className={`survey-visual-option ${
-                  isSelected('timeframe', time.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleSingleSelect('timeframe', time.toLowerCase())}
-              >
-                {isSelected('timeframe', time.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{time}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Nivel de compromiso */}
-        <div className="mb-8">
-          <h3 className="survey-question">Nivel de compromiso</h3>
-          <p className="text-sm text-muted-foreground mb-4">¿Qué tan comprometido estás con alcanzar tus objetivos?</p>
-
-          <div className="mb-2">
-            <input
-              type="range"
-              min="1"
-              max="5"
-              step="1"
-              value={surveyData.commitmentLevel}
-              onChange={handleCommitmentChange}
-              className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
-            />
-          </div>
-
-          <div className="flex justify-between text-xs text-muted-foreground mb-2">
-            <span>Mínimo</span>
-            <span>Medio</span>
-            <span>Extremo</span>
-          </div>
-
-          <div className="text-center text-sm font-medium text-primary">
-            {getCommitmentDescription()}
-          </div>
-        </div>
-
-        {/* Preferencia de medición de resultados */}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-6"
+    >
+      <h2 className="text-2xl font-bold text-gray-900">Metas y Objetivos</h2>
+      
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <h3 className="survey-question">Preferencia de medición de resultados</h3>
-          <p className="text-sm text-muted-foreground mb-4">¿Cómo prefieres medir tu progreso?</p>
+          <label htmlFor="mainGoal" className="block text-sm font-medium text-gray-700">
+            Meta Principal
+          </label>
+          <select
+            id="mainGoal"
+            {...register('mainGoal')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          >
+            <option value="">Selecciona una meta</option>
+            <option value="perder_peso">Perder peso</option>
+            <option value="ganar_musculo">Ganar músculo</option>
+            <option value="mejorar_salud">Mejorar salud general</option>
+            <option value="mantener_peso">Mantener peso actual</option>
+            <option value="ninguna">Ninguna meta específica</option>
+          </select>
+          {errors.mainGoal && (
+            <p className="mt-1 text-sm text-red-600">{errors.mainGoal.message}</p>
+          )}
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              'Peso corporal',
-              'Porcentaje de grasa',
-              'Fotos de progreso',
-              'Rendimiento físico',
-              'Medidas corporales',
-              'Sensaciones de salud'
-            ].map((measure) => (
-              <div
-                key={`measure-${measure}`}
-                className={`survey-visual-option ${
-                  isSelected('measurementPreference', measure.toLowerCase()) ? 'survey-visual-option-selected' : ''
-                }`}
-                onClick={() => handleMultiSelect('measurementPreference', measure.toLowerCase())}
-              >
-                {isSelected('measurementPreference', measure.toLowerCase()) && (
-                  <span className="text-primary">
-                    <FiCheck size={18} />
-                  </span>
-                )}
-                <span>{measure}</span>
+        <div>
+          <label htmlFor="timeframe" className="block text-sm font-medium text-gray-700">
+            Plazo
+          </label>
+          <select
+            id="timeframe"
+            {...register('timeframe')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          >
+            <option value="">Selecciona un plazo</option>
+            <option value="corto_plazo">Corto plazo (1-3 meses)</option>
+            <option value="medio_plazo">Medio plazo (3-6 meses)</option>
+            <option value="largo_plazo">Largo plazo (6+ meses)</option>
+            <option value="ninguno">Sin plazo específico</option>
+          </select>
+          {errors.timeframe && (
+            <p className="mt-1 text-sm text-red-600">{errors.timeframe.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="commitmentLevel" className="block text-sm font-medium text-gray-700">
+            Nivel de Compromiso (1-5)
+          </label>
+          <input
+            type="range"
+            id="commitmentLevel"
+            min="1"
+            max="5"
+            step="1"
+            {...register('commitmentLevel', { valueAsNumber: true })}
+            className="mt-1 w-full"
+          />
+          {errors.commitmentLevel && (
+            <p className="mt-1 text-sm text-red-600">{errors.commitmentLevel.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Preferencias de Medición
+          </label>
+          <div className="mt-2 space-y-2">
+            {['peso', 'medidas', 'fotos', 'rendimiento'].map((preference) => (
+              <div key={preference} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={preference}
+                  value={preference}
+                  {...register('measurementPreference')}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <label htmlFor={preference} className="ml-2 text-sm text-gray-700">
+                  {preference.charAt(0).toUpperCase() + preference.slice(1)}
+                </label>
               </div>
             ))}
           </div>
+          {errors.measurementPreference && (
+            <p className="mt-1 text-sm text-red-600">{errors.measurementPreference.message}</p>
+          )}
         </div>
-      </div>
-    </div>
+
+        <button
+          type="submit"
+          className="w-full rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          Guardar
+        </button>
+      </form>
+    </motion.div>
   );
 };
 

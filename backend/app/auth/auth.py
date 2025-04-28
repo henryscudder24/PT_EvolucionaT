@@ -4,13 +4,13 @@ from app.database import get_db
 from app.crud.usuario import get_user_by_id
 from app.schemas.usuario import UsuarioOut
 from datetime import datetime, timezone, timedelta
-from jose import jwt, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
 from fastapi.security import OAuth2PasswordBearer
 from config import SECRET_KEY, ALGORITHM 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_token(data: dict, expires_delta: timedelta | None = None):
     data_token = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -19,6 +19,17 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     data_token.update({"exp":expire})
     token_jwt = jwt.encode(data_token, key=SECRET_KEY, algorithm=ALGORITHM)
     return token_jwt
+
+def verify_token(token: str, secret_key: str, algorithm: str):
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+        if not payload.get("reset_password"):
+            raise HTTPException(status_code=400, detail="Token inválido o expirado")
+        return payload
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="Token expirado")
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Token inválido")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(

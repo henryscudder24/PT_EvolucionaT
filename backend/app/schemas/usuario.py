@@ -22,6 +22,13 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     user: UsuarioOut
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordReset(BaseModel):
+    token: str
+    new_password: str
     
     
   

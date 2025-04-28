@@ -36,21 +36,20 @@ const Login = () => {
           contraseña: data.password,
         }),
       });
-  
+
       if (!response.ok) {
         const error = await response.json();
         console.error("Error en el login:", error);
         alert("Error: " + error.detail);
         return;
       }
-  
+
       const user = await response.json();
       console.log("✅ Usuario autenticado:", user);
       alert(`Bienvenido, ${user.user.nombre}!`);
-      
+
       localStorage.setItem('access_token', user.access_token)
-      navigate('/me');
-      //navigate('/survey');
+      navigate('/survey');
 
     } catch (err) {
       console.error("Error inesperado:", err);
@@ -83,7 +82,7 @@ const Login = () => {
                 {...register('email')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
               />
-              {errors.email&& <p className="text-red-500 text-xs">{errors.email.message}</p>}
+              {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
@@ -93,7 +92,7 @@ const Login = () => {
                 {...register('password')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
               />
-              {errors.password&& <p className="text-red-500 text-xs">{errors.password.message}</p>}
+              {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
             </div>
             <button
               type="submit"
@@ -101,13 +100,19 @@ const Login = () => {
             >
               Iniciar Sesión
             </button>
-            <p className="text-sm text-center text-gray-500 mt-4">
+          </form>
+          <div className="flex justify-center mt-4">
+            <p className="text-sm text-center text-gray-500">
               ¿No tienes cuenta?{' '}
               <Link to="/register" className="text-primary hover:text-primary-dark">
                 Regístrate aquí
               </Link>
+              {' / '}
+              <Link to="/password-reset-request" className="text-primary hover:text-primary-dark">
+                ¿Olvidaste tu contraseña?
+              </Link>
             </p>
-          </form>
+          </div>
         </div>
       </div>
     </div>

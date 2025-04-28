@@ -21,7 +21,7 @@ const Navbar = () => {
             <Link to="/contact" className="text-white hover:text-primary transition-colors">Contacto</Link>
 
             {/*Auth Links*/}
-            <Link to="/register" className="text-white hover:text-primary transition-colors">Registrase</Link>
+            <Link to="/register" className="text-white hover:text-primary transition-colors">Registrarse</Link>
             <Link to="/login" className="text-white hover:text-primary transition-colors">Iniciar Sesión</Link>
           </div>
 

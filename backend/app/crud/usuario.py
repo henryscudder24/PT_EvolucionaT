@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.models_auto import Usuario
 from app.schemas.usuario import UsuarioCreate
 from passlib.hash import bcrypt
+from fastapi import HTTPException
 
 def get_usuario_por_correo(db: Session, correo: str):
     return db.query(Usuario).filter(Usuario.correo == correo).first()
@@ -17,6 +18,16 @@ def crear_usuario(db: Session, datos: UsuarioCreate):
         contraseña=hashed_password
     )
     db.add(usuario)
+    db.commit()
+    db.refresh(usuario)
+    return usuario
+
+def actualizar_contraseña(db: Session, user_id: int, nueva_contraseña: str):
+    hashed_password = bcrypt.hash(nueva_contraseña)
+    usuario = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    usuario.contraseña = hashed_password
     db.commit()
     db.refresh(usuario)
     return usuario

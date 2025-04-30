@@ -1,129 +1,137 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { goalsObjectivesSchema, type GoalsObjectivesData } from '../../validationSchemas';
 import { useSurvey } from '../../context/SurveyContext';
-import { motion } from 'framer-motion';
-import { FiCheck } from 'react-icons/fi';
+import { GoalsObjectivesData } from '../../validationSchemas';
 
-const GoalsObjectives = () => {
+type ObjetivoPrincipalType = GoalsObjectivesData['objetivoPrincipal'];
+type TiempoMetaType = GoalsObjectivesData['tiempoMeta'];
+type MedicionProgresoType = GoalsObjectivesData['medicionProgreso'][number];
+
+const GoalsObjectives: React.FC = () => {
   const { surveyData, updateSurveyData } = useSurvey();
-  const { register, handleSubmit, formState: { errors } } = useForm<GoalsObjectivesData>({
-    resolver: zodResolver(goalsObjectivesSchema),
-    defaultValues: {
-      mainGoal: surveyData.goalsObjectives?.mainGoal || '',
-      timeframe: surveyData.goalsObjectives?.timeframe || '',
-      commitmentLevel: surveyData.goalsObjectives?.commitmentLevel || 3,
-      measurementPreference: surveyData.goalsObjectives?.measurementPreference || [],
-    },
-  });
 
-  const onSubmit = (data: GoalsObjectivesData) => {
-    updateSurveyData({ goalsObjectives: data });
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    updateSurveyData({
+      goalsObjectives: {
+        ...surveyData.goalsObjectives,
+        [name]: value
+      }
+    });
+  };
+
+  const handleNivelCompromisoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    updateSurveyData({
+      goalsObjectives: {
+        ...surveyData.goalsObjectives,
+        nivelCompromiso: value
+      }
+    });
+  };
+
+  const handleMedicionProgresoChange = (value: MedicionProgresoType) => {
+    const currentValues = surveyData.goalsObjectives.medicionProgreso;
+    const newValues = currentValues.includes(value)
+      ? currentValues.filter(v => v !== value)
+      : [...currentValues, value];
+
+    updateSurveyData({
+      goalsObjectives: {
+        ...surveyData.goalsObjectives,
+        medicionProgreso: newValues
+      }
+    });
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <h2 className="text-2xl font-bold text-gray-900">Metas y Objetivos</h2>
-      
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <label htmlFor="mainGoal" className="block text-sm font-medium text-gray-700">
-            Meta Principal
-          </label>
-          <select
-            id="mainGoal"
-            {...register('mainGoal')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          >
-            <option value="">Selecciona una meta</option>
-            <option value="perder_peso">Perder peso</option>
-            <option value="ganar_musculo">Ganar músculo</option>
-            <option value="mejorar_salud">Mejorar salud general</option>
-            <option value="mantener_peso">Mantener peso actual</option>
-            <option value="ninguna">Ninguna meta específica</option>
-          </select>
-          {errors.mainGoal && (
-            <p className="mt-1 text-sm text-red-600">{errors.mainGoal.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label htmlFor="timeframe" className="block text-sm font-medium text-gray-700">
-            Plazo
-          </label>
-          <select
-            id="timeframe"
-            {...register('timeframe')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          >
-            <option value="">Selecciona un plazo</option>
-            <option value="corto_plazo">Corto plazo (1-3 meses)</option>
-            <option value="medio_plazo">Medio plazo (3-6 meses)</option>
-            <option value="largo_plazo">Largo plazo (6+ meses)</option>
-            <option value="ninguno">Sin plazo específico</option>
-          </select>
-          {errors.timeframe && (
-            <p className="mt-1 text-sm text-red-600">{errors.timeframe.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label htmlFor="commitmentLevel" className="block text-sm font-medium text-gray-700">
-            Nivel de Compromiso (1-5)
-          </label>
-          <input
-            type="range"
-            id="commitmentLevel"
-            min="1"
-            max="5"
-            step="1"
-            {...register('commitmentLevel', { valueAsNumber: true })}
-            className="mt-1 w-full"
-          />
-          {errors.commitmentLevel && (
-            <p className="mt-1 text-sm text-red-600">{errors.commitmentLevel.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Preferencias de Medición
-          </label>
-          <div className="mt-2 space-y-2">
-            {['peso', 'medidas', 'fotos', 'rendimiento'].map((preference) => (
-              <div key={preference} className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={preference}
-                  value={preference}
-                  {...register('measurementPreference')}
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <label htmlFor={preference} className="ml-2 text-sm text-gray-700">
-                  {preference.charAt(0).toUpperCase() + preference.slice(1)}
-                </label>
-              </div>
-            ))}
-          </div>
-          {errors.measurementPreference && (
-            <p className="mt-1 text-sm text-red-600">{errors.measurementPreference.message}</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          className="w-full rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+    <div className="space-y-6">
+      <div>
+        <label htmlFor="objetivoPrincipal" className="block text-sm font-medium text-gray-700">
+          ¿Cuál es tu objetivo principal?
+        </label>
+        <select
+          id="objetivoPrincipal"
+          name="objetivoPrincipal"
+          value={surveyData.goalsObjectives.objetivoPrincipal}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          Guardar
-        </button>
-      </form>
-    </motion.div>
+          <option value="Pérdida de peso">Pérdida de peso</option>
+          <option value="Ganancia de masa muscular">Ganancia de masa muscular</option>
+          <option value="Mejora de la resistencia">Mejora de la resistencia</option>
+          <option value="Mejora de la flexibilidad">Mejora de la flexibilidad</option>
+          <option value="Mantenimiento de la salud">Mantenimiento de la salud</option>
+          <option value="Rendimiento deportivo">Rendimiento deportivo</option>
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="tiempoMeta" className="block text-sm font-medium text-gray-700">
+          ¿En cuánto tiempo te gustaría alcanzar tu meta?
+        </label>
+        <select
+          id="tiempoMeta"
+          name="tiempoMeta"
+          value={surveyData.goalsObjectives.tiempoMeta}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        >
+          <option value="1-3 meses">1-3 meses</option>
+          <option value="3-6 meses">3-6 meses</option>
+          <option value="6-12 meses">6-12 meses</option>
+          <option value="Más de 12 meses">Más de 12 meses</option>
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="nivelCompromiso" className="block text-sm font-medium text-gray-700">
+          Nivel de compromiso (1-5)
+        </label>
+        <input
+          type="range"
+          id="nivelCompromiso"
+          name="nivelCompromiso"
+          min="1"
+          max="5"
+          value={surveyData.goalsObjectives.nivelCompromiso}
+          onChange={handleNivelCompromisoChange}
+          className="mt-1 block w-full"
+        />
+        <div className="flex justify-between text-sm text-gray-500">
+          <span>1 - Bajo</span>
+          <span>2</span>
+          <span>3 - Medio</span>
+          <span>4</span>
+          <span>5 - Alto</span>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          ¿Cómo prefieres medir tu progreso?
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            'Peso corporal',
+            'Medidas corporales',
+            'Fotos de progreso',
+            'Rendimiento en ejercicios',
+            'Niveles de energía',
+            'Calidad del sueño'
+          ].map(medicion => (
+            <label key={medicion} className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={surveyData.goalsObjectives.medicionProgreso.includes(medicion as MedicionProgresoType)}
+                onChange={() => handleMedicionProgresoChange(medicion as MedicionProgresoType)}
+                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">{medicion}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 

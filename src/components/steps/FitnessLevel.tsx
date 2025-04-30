@@ -1,158 +1,131 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { fitnessLevelSchema, type FitnessLevelData } from '../../validationSchemas';
 import { useSurvey } from '../../context/SurveyContext';
-import { motion } from 'framer-motion';
-import { FiCheck } from 'react-icons/fi';
+import { FitnessLevelData } from '../../validationSchemas';
+
+type FrecuenciaEjercicioType = FitnessLevelData['frecuenciaEjercicio'];
+type TipoEjercicioType = FitnessLevelData['tiposEjercicio'][number];
+type EquipamientoType = FitnessLevelData['equipamiento'][number];
+type TiempoEjercicioType = FitnessLevelData['tiempoEjercicio'];
 
 const FitnessLevel: React.FC = () => {
   const { surveyData, updateSurveyData } = useSurvey();
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FitnessLevelData>({
-    resolver: zodResolver(fitnessLevelSchema),
-    defaultValues: {
-      exerciseFrequency: surveyData.fitnessLevel?.exerciseFrequency || '',
-      exerciseType: surveyData.fitnessLevel?.exerciseType || [],
-      availableEquipment: surveyData.fitnessLevel?.availableEquipment || [],
-      availableTime: surveyData.fitnessLevel?.availableTime || '',
-      medicalConditions: surveyData.fitnessLevel?.medicalConditions || '',
-    },
-  });
 
-  // Observar cambios en los campos y actualizar los datos
-  React.useEffect(() => {
-    const subscription = watch((value) => {
-      updateSurveyData({ fitnessLevel: value as FitnessLevelData });
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    updateSurveyData({
+      fitnessLevel: {
+        ...surveyData.fitnessLevel,
+        [name]: value
+      }
     });
-    return () => subscription.unsubscribe();
-  }, [watch, updateSurveyData]);
+  };
+
+  const handleMultiSelect = (
+    name: 'tiposEjercicio' | 'equipamiento',
+    value: TipoEjercicioType | EquipamientoType
+  ) => {
+    const currentValues = surveyData.fitnessLevel[name] as string[];
+    const newValues = currentValues.includes(value)
+      ? currentValues.filter(v => v !== value)
+      : [...currentValues, value];
+
+    updateSurveyData({
+      fitnessLevel: {
+        ...surveyData.fitnessLevel,
+        [name]: newValues
+      }
+    });
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <h2 className="text-2xl font-semibold mb-6">Nivel de Actividad Física</h2>
+    <div className="space-y-6">
+      <div>
+        <label htmlFor="frecuenciaEjercicio" className="block text-sm font-medium text-gray-700">
+          ¿Con qué frecuencia haces ejercicio?
+        </label>
+        <select
+          id="frecuenciaEjercicio"
+          name="frecuenciaEjercicio"
+          value={surveyData.fitnessLevel.frecuenciaEjercicio}
+          onChange={handleSelectChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        >
+          <option value="Nunca">Nunca</option>
+          <option value="1-2 veces por semana">1-2 veces por semana</option>
+          <option value="3-4 veces por semana">3-4 veces por semana</option>
+          <option value="5+ veces por semana">5+ veces por semana</option>
+        </select>
+      </div>
 
-      <form className="space-y-6">
-        {/* Frecuencia de ejercicio */}
-        <div className="space-y-4">
-          <label className="block text-sm font-medium">
-            ¿Con qué frecuencia realizas ejercicio?
-          </label>
-          <select
-            {...register('exerciseFrequency')}
-            className="w-full p-2 border rounded-md"
-          >
-            <option value="">Selecciona una opción</option>
-            <option value="nunca">Nunca</option>
-            <option value="ocasional">Ocasionalmente</option>
-            <option value="1-2-semana">1-2 veces por semana</option>
-            <option value="3-4-semana">3-4 veces por semana</option>
-            <option value="5+-semana">5 o más veces por semana</option>
-          </select>
-          {errors.exerciseFrequency && (
-            <p className="text-red-500 text-sm">{errors.exerciseFrequency.message}</p>
-          )}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          ¿Qué tipos de ejercicio prefieres?
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            'Cardio',
+            'Pesas',
+            'Yoga/Pilates',
+            'Deportes de equipo',
+            'Natación',
+            'Ciclismo',
+            'Artes marciales'
+          ].map(tipo => (
+            <label key={tipo} className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={surveyData.fitnessLevel.tiposEjercicio.includes(tipo as TipoEjercicioType)}
+                onChange={() => handleMultiSelect('tiposEjercicio', tipo as TipoEjercicioType)}
+                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">{tipo}</span>
+            </label>
+          ))}
         </div>
+      </div>
 
-        {/* Tipos de ejercicio */}
-        <div className="space-y-4">
-          <label className="block text-sm font-medium">
-            ¿Qué tipos de ejercicio prefieres? (Selecciona todos los que apliquen)
-          </label>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              'cardio',
-              'pesas',
-              'yoga',
-              'pilates',
-              'natacion',
-              'deportes-equipo',
-              'artes-marciales',
-              'baile'
-            ].map((type) => (
-              <label key={type} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  value={type}
-                  {...register('exerciseType')}
-                  className="rounded"
-                />
-                <span>{type.replace('-', ' ').charAt(0).toUpperCase() + type.slice(1)}</span>
-              </label>
-            ))}
-          </div>
-          {errors.exerciseType && (
-            <p className="text-red-500 text-sm">{errors.exerciseType.message}</p>
-          )}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          ¿Qué equipamiento tienes disponible?
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            'Pesas libres',
+            'Máquinas de gimnasio',
+            'Bandas elásticas',
+            'Bicicleta',
+            'Ninguno'
+          ].map(equipo => (
+            <label key={equipo} className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={surveyData.fitnessLevel.equipamiento.includes(equipo as EquipamientoType)}
+                onChange={() => handleMultiSelect('equipamiento', equipo as EquipamientoType)}
+                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">{equipo}</span>
+            </label>
+          ))}
         </div>
+      </div>
 
-        {/* Equipo disponible */}
-        <div className="space-y-4">
-          <label className="block text-sm font-medium">
-            ¿Qué equipo tienes disponible? (Selecciona todos los que apliquen)
-          </label>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              'pesas',
-              'bandas',
-              'maquinas',
-              'bicicleta',
-              'caminadora',
-              'colchoneta',
-              'ninguno'
-            ].map((equipment) => (
-              <label key={equipment} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  value={equipment}
-                  {...register('availableEquipment')}
-                  className="rounded"
-                />
-                <span>{equipment.charAt(0).toUpperCase() + equipment.slice(1)}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Tiempo disponible */}
-        <div className="space-y-4">
-          <label className="block text-sm font-medium">
-            ¿Cuánto tiempo puedes dedicar al ejercicio por sesión?
-          </label>
-          <select
-            {...register('availableTime')}
-            className="w-full p-2 border rounded-md"
-          >
-            <option value="">Selecciona una opción</option>
-            <option value="15-min">15 minutos</option>
-            <option value="30-min">30 minutos</option>
-            <option value="45-min">45 minutos</option>
-            <option value="60-min">1 hora</option>
-            <option value="90-min">1.5 horas</option>
-            <option value="120-min">2 horas o más</option>
-          </select>
-          {errors.availableTime && (
-            <p className="text-red-500 text-sm">{errors.availableTime.message}</p>
-          )}
-        </div>
-
-        {/* Condiciones médicas */}
-        <div className="space-y-4">
-          <label className="block text-sm font-medium">
-            ¿Tienes alguna condición médica que afecte tu actividad física?
-          </label>
-          <textarea
-            {...register('medicalConditions')}
-            className="w-full p-2 border rounded-md h-24"
-            placeholder="Describe cualquier condición médica relevante..."
-          />
-        </div>
-      </form>
-    </motion.div>
+      <div>
+        <label htmlFor="tiempoEjercicio" className="block text-sm font-medium text-gray-700">
+          ¿Cuánto tiempo puedes dedicar al ejercicio?
+        </label>
+        <select
+          id="tiempoEjercicio"
+          name="tiempoEjercicio"
+          value={surveyData.fitnessLevel.tiempoEjercicio}
+          onChange={handleSelectChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        >
+          <option value="Menos de 30 minutos">Menos de 30 minutos</option>
+          <option value="30-60 minutos">30-60 minutos</option>
+          <option value="Más de 60 minutos">Más de 60 minutos</option>
+        </select>
+      </div>
+    </div>
   );
 };
 

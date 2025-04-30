@@ -64,10 +64,31 @@ const Survey: React.FC = () => {
     }
   };
 
+  const getStepTitle = () => {
+    switch (currentStep) {
+      case 1:
+        return 'Información Personal';
+      case 2:
+        return 'Preferencias Alimentarias';
+      case 3:
+        return 'Metas y Objetivos';
+      case 4:
+        return 'Nivel de Condición Física';
+      case 5:
+        return 'Historial Médico';
+      case 6:
+        return 'Hábitos Diarios';
+      case 7:
+        return '¡Completado!';
+      default:
+        return 'Encuesta de Salud';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8">Encuesta de Salud</h1>
+        <h1 className="text-4xl font-bold text-center mb-8">{getStepTitle()}</h1>
         <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
           <SurveyProgress />
           {renderCurrentStep()}

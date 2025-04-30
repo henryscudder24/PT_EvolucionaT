@@ -1,74 +1,219 @@
 import { z } from 'zod';
 
-// Schema for form data (numbers)
+// Schema for personal information
 export const personalInfoFormSchema = z.object({
-  nombre: z.string().min(1, 'El nombre es requerido'),
-  edad: z.number().min(18, 'Debes tener al menos 18 años').max(100, 'La edad no puede ser mayor a 100 años'),
-  genero: z.string().min(1, 'El género es requerido'),
-  altura: z.number().min(100, 'La altura debe ser al menos 100 cm').max(250, 'La altura no puede ser mayor a 250 cm'),
-  peso: z.number().min(30, 'El peso debe ser al menos 30 kg').max(300, 'El peso no puede ser mayor a 300 kg'),
-  telefono: z.string().min(1, 'El teléfono es requerido')
-});
-
-// Schema for context data (strings)
-export const personalInfoContextSchema = z.object({
-  nombre: z.string().min(1, 'El nombre es requerido'),
-  edad: z.string().min(1, 'La edad es requerida'),
-  genero: z.string().min(1, 'El género es requerido'),
-  altura: z.string().min(1, 'La altura es requerida'),
-  peso: z.string().min(1, 'El peso es requerido'),
-  telefono: z.string().min(1, 'El teléfono es requerido')
+  genero: z.enum(['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'], {
+    required_error: 'El género es requerido'
+  }),
+  edad: z.number()
+    .min(15, 'La edad debe ser al menos 15 años')
+    .max(100, 'La edad no puede ser mayor a 100 años'),
+  altura: z.number()
+    .min(100, 'La altura debe ser al menos 100 cm')
+    .max(250, 'La altura no puede ser mayor a 250 cm'),
+  peso: z.number()
+    .min(30, 'El peso debe ser al menos 30 kg')
+    .max(300, 'El peso no puede ser mayor a 300 kg'),
+  nivelActividad: z.enum([
+    'Sedentario',
+    'Moderado',
+    'Activo',
+    'Muy activo',
+    'Extremadamente activo'
+  ], {
+    required_error: 'El nivel de actividad es requerido'
+  })
 });
 
 // Schema for food preferences
-export const foodPreferencesSchema = z.object({
-  tipoDieta: z.array(z.string()).min(1, 'Selecciona al menos un tipo de dieta'),
-  alergias: z.array(z.string()),
-  alimentosEvitados: z.array(z.string()),
-  frecuenciaComida: z.string().min(1, 'Selecciona la frecuencia de comidas')
+export const foodPreferencesFormSchema = z.object({
+  tipoDieta: z.array(z.enum([
+    'Omnívora',
+    'Vegetariana',
+    'Vegana',
+    'Pescetariana',
+    'Paleo',
+    'Cetogénica',
+    'Sin gluten',
+    'Sin lactosa'
+  ])).min(1, 'Selecciona al menos un tipo de dieta'),
+  alergias: z.array(z.enum([
+    'Frutos secos',
+    'Lácteos',
+    'Mariscos',
+    'Huevos',
+    'Gluten',
+    'Soja',
+    'Otro'
+  ])),
+  otrosAlergias: z.string().optional(),
+  alimentosFavoritos: z.array(z.enum([
+    'Carnes',
+    'Pollo',
+    'Pescados',
+    'Verduras',
+    'Frutas',
+    'Pastas',
+    'Arroz',
+    'Legumbres',
+    'Lácteos',
+    'Snacks saludables'
+  ])).min(1, 'Selecciona al menos un alimento favorito'),
+  alimentosEvitar: z.string().optional()
 });
 
+// Schema for goals and objectives
 export const goalsObjectivesSchema = z.object({
-  mainGoal: z.string().min(1, 'Por favor selecciona una meta principal'),
-  timeframe: z.string().min(1, 'Por favor selecciona un plazo'),
-  commitmentLevel: z.number().min(1).max(5),
-  measurementPreference: z.array(z.string()).min(1, 'Por favor selecciona al menos una preferencia de medición'),
-});
-
-export const dailyHabitsSchema = z.object({
-  sleepSchedule: z.string().min(1, 'Por favor selecciona tu horario de sueño'),
-  stressLevel: z.string().min(1, 'Por favor selecciona tu nivel de estrés'),
-  workSchedule: z.string().min(1, 'Por favor selecciona tu horario de trabajo'),
-  dietaryRestrictions: z.array(z.string()),
-  mealPreparationTime: z.string().min(1, 'Por favor selecciona el tiempo de preparación de comidas'),
-  snackingHabits: z.string().min(1, 'Por favor selecciona tus hábitos de snacking'),
-  waterIntake: z.string().min(1, 'Por favor selecciona tu consumo de agua'),
-});
-
-export const medicalHistorySchema = z.object({
-  hasChronicConditions: z.boolean(),
-  chronicConditions: z.array(z.string()),
-  takingMedication: z.boolean(),
-  medications: z.string().optional(),
-  recentInjuries: z.array(z.string()),
-  familyHistoryIssues: z.array(z.string()),
-  allergies: z.array(z.string()),
-  additionalNotes: z.string().optional(),
+  objetivoPrincipal: z.enum([
+    'Pérdida de peso',
+    'Ganancia de masa muscular',
+    'Mejora de la resistencia',
+    'Mejora de la flexibilidad',
+    'Mantenimiento de la salud',
+    'Rendimiento deportivo'
+  ], {
+    required_error: 'El objetivo principal es requerido'
+  }),
+  tiempoMeta: z.enum([
+    '1-3 meses',
+    '3-6 meses',
+    '6-12 meses',
+    'Más de 12 meses'
+  ], {
+    required_error: 'El tiempo para alcanzar la meta es requerido'
+  }),
+  nivelCompromiso: z.number()
+    .min(1, 'El nivel de compromiso debe ser al menos 1')
+    .max(5, 'El nivel de compromiso no puede ser mayor a 5'),
+  medicionProgreso: z.array(z.enum([
+    'Peso corporal',
+    'Medidas corporales',
+    'Fotos de progreso',
+    'Rendimiento en ejercicios',
+    'Niveles de energía',
+    'Calidad del sueño'
+  ])).min(1, 'Selecciona al menos una forma de medir el progreso')
 });
 
 // Schema for fitness level
 export const fitnessLevelSchema = z.object({
-  exerciseFrequency: z.string().min(1, 'Por favor selecciona la frecuencia de ejercicio'),
-  exerciseType: z.array(z.string()).min(1, 'Por favor selecciona al menos un tipo de ejercicio'),
-  availableEquipment: z.array(z.string()),
-  availableTime: z.string().min(1, 'Por favor selecciona el tiempo disponible'),
-  medicalConditions: z.string(),
+  frecuenciaEjercicio: z.enum([
+    'Nunca',
+    '1-2 veces por semana',
+    '3-4 veces por semana',
+    '5+ veces por semana'
+  ], {
+    required_error: 'La frecuencia de ejercicio es requerida'
+  }),
+  tiposEjercicio: z.array(z.enum([
+    'Cardio',
+    'Pesas',
+    'Yoga/Pilates',
+    'Deportes de equipo',
+    'Natación',
+    'Ciclismo',
+    'Artes marciales'
+  ])).min(1, 'Selecciona al menos un tipo de ejercicio'),
+  equipamiento: z.array(z.enum([
+    'Pesas libres',
+    'Máquinas de gimnasio',
+    'Bandas elásticas',
+    'Bicicleta',
+    'Ninguno'
+  ])).min(1, 'Selecciona el equipamiento disponible'),
+  tiempoEjercicio: z.enum([
+    'Menos de 30 minutos',
+    '30-60 minutos',
+    'Más de 60 minutos'
+  ], {
+    required_error: 'El tiempo disponible para ejercicio es requerido'
+  })
+});
+
+// Schema for medical history
+export const medicalHistorySchema = z.object({
+  condicionesCronicas: z.array(z.enum([
+    'Diabetes',
+    'Hipertensión',
+    'Problemas cardíacos',
+    'Asma',
+    'Artritis',
+    'Otro'
+  ])),
+  otrasCondiciones: z.string().optional(),
+  medicamentos: z.string().optional(),
+  lesionesRecientes: z.string().optional(),
+  antecedentesFamiliares: z.string().optional()
+});
+
+// Schema for daily habits
+export const dailyHabitsSchema = z.object({
+  horasSueno: z.enum([
+    'Menos de 6 horas',
+    '6-7 horas',
+    '7-8 horas',
+    'Más de 8 horas'
+  ], {
+    required_error: 'Las horas de sueño son requeridas'
+  }),
+  calidadSueno: z.enum([
+    'Excelente',
+    'Buena',
+    'Regular',
+    'Mala'
+  ], {
+    required_error: 'La calidad del sueño es requerida'
+  }),
+  nivelEstres: z.enum([
+    'Bajo',
+    'Moderado',
+    'Alto',
+    'Muy alto'
+  ], {
+    required_error: 'El nivel de estrés es requerido'
+  }),
+  consumoAgua: z.enum([
+    'Menos de 1 litro',
+    '1-2 litros',
+    '2-3 litros',
+    'Más de 3 litros'
+  ], {
+    required_error: 'El consumo de agua es requerido'
+  }),
+  comidasPorDia: z.enum([
+    '2 o menos',
+    '3-4',
+    '5 o más'
+  ], {
+    required_error: 'El número de comidas por día es requerido'
+  }),
+  habitosSnacks: z.enum([
+    'No como snacks',
+    '1-2 snacks al día',
+    '3 o más snacks al día'
+  ], {
+    required_error: 'Los hábitos de snacks son requeridos'
+  }),
+  horasPantallas: z.enum([
+    'Menos de 4 horas',
+    '4-8 horas',
+    'Más de 8 horas'
+  ], {
+    required_error: 'Las horas frente a pantallas son requeridas'
+  }),
+  tipoTrabajo: z.enum([
+    'Sedentario',
+    'Activo',
+    'Mixto',
+    'Trabajo físico intenso'
+  ], {
+    required_error: 'El tipo de trabajo es requerido'
+  })
 });
 
 export type PersonalInfoFormData = z.infer<typeof personalInfoFormSchema>;
-export type PersonalInfoContextData = z.infer<typeof personalInfoContextSchema>;
-export type FoodPreferencesData = z.infer<typeof foodPreferencesSchema>;
+export type FoodPreferencesData = z.infer<typeof foodPreferencesFormSchema>;
 export type GoalsObjectivesData = z.infer<typeof goalsObjectivesSchema>;
-export type DailyHabitsData = z.infer<typeof dailyHabitsSchema>;
+export type FitnessLevelData = z.infer<typeof fitnessLevelSchema>;
 export type MedicalHistoryData = z.infer<typeof medicalHistorySchema>;
-export type FitnessLevelData = z.infer<typeof fitnessLevelSchema>; 
+export type DailyHabitsData = z.infer<typeof dailyHabitsSchema>; 

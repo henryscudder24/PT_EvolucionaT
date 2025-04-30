@@ -1,51 +1,113 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios, { AxiosError } from 'axios';
 
 interface User {
   id: number;
-  nombre: string;
   correo: string;
+  nombre: string;
+}
+
+interface ErrorResponse {
+  detail: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (token: string, userData: User) => void;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
+
+const API_URL = 'http://localhost:8000';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!token);
 
   useEffect(() => {
-    // Check for token and user data in localStorage on mount
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
-      setUser(JSON.parse(userData));
-      setIsAuthenticated(true);
+    if (token) {
+      fetchUserData();
     }
-  }, []);
+  }, [token]);
 
-  const login = (token: string, userData: User) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-    setIsAuthenticated(true);
+  const fetchUserData = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/usuarios/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUser(response.data);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      logout();
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      console.log('Attempting login with:', { email });
+      const response = await axios.post(
+        `${API_URL}/api/usuarios/login`,
+        {
+          correo: email,
+          contraseña: password,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      console.log('Login response:', response.data);
+      const { token: accessToken, user: userData } = response.data;
+      
+      if (!accessToken || !userData) {
+        throw new Error('Respuesta del servidor inválida');
+      }
+
+      setToken(accessToken);
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem('token', accessToken);
+    } catch (error) {
+      console.error('Login error:', error);
+      
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ErrorResponse>;
+        if (axiosError.response) {
+          // El servidor respondió con un código de error
+          const errorMessage = axiosError.response.data?.detail || 'Error en el servidor';
+          throw new Error(errorMessage);
+        } else if (axiosError.request) {
+          // La petición fue hecha pero no se recibió respuesta
+          throw new Error('No se pudo conectar con el servidor');
+        } else {
+          // Algo ocurrió al configurar la petición
+          throw new Error('Error al procesar la petición');
+        }
+      }
+      
+      throw new Error('Ocurrió un error inesperado');
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
     setUser(null);
+    setToken(null);
     setIsAuthenticated(false);
+    localStorage.removeItem('token');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

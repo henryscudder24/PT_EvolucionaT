@@ -1,145 +1,109 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { personalInfoFormSchema, PersonalInfoFormData } from '../../validationSchemas';
 import { useSurvey } from '../../context/SurveyContext';
-import { motion } from 'framer-motion';
-import { toast } from 'react-hot-toast';
+import { PersonalInfoFormData } from '../../validationSchemas';
 
 const PersonalInfo: React.FC = () => {
-  const { surveyData, updateSurveyData, nextStep } = useSurvey();
-  
-  const { register, handleSubmit, formState: { errors } } = useForm<PersonalInfoFormData>({
-    resolver: zodResolver(personalInfoFormSchema),
-    defaultValues: {
-      nombre: surveyData.personalInfo.nombre,
-      genero: surveyData.personalInfo.genero,
-      edad: surveyData.personalInfo.edad ? Number(surveyData.personalInfo.edad) : undefined,
-      altura: surveyData.personalInfo.altura ? Number(surveyData.personalInfo.altura) : undefined,
-      peso: surveyData.personalInfo.peso ? Number(surveyData.personalInfo.peso) : undefined,
-      telefono: surveyData.personalInfo.telefono
-    }
-  });
+  const { surveyData, updateSurveyData } = useSurvey();
 
-  const onSubmit = (data: PersonalInfoFormData) => {
-    // Convertir los números a strings para el contexto
-    const formattedData = {
-      ...data,
-      edad: data.edad.toString(),
-      altura: data.altura.toString(),
-      peso: data.peso.toString()
-    };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const numValue = ['edad', 'altura', 'peso'].includes(name) ? Number(value) : value;
     
-    updateSurveyData({ personalInfo: formattedData });
-    nextStep();
-    toast.success('Información personal guardada');
+    updateSurveyData({
+      personalInfo: {
+        ...surveyData.personalInfo,
+        [name]: numValue
+      }
+    });
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="max-w-2xl mx-auto p-6"
-    >
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Información Personal</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nombre completo
-          </label>
-          <input
-            type="text"
-            {...register('nombre')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          {errors.nombre && (
-            <p className="mt-1 text-sm text-red-600">{errors.nombre.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Género
-          </label>
-          <select
-            {...register('genero')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Selecciona tu género</option>
-            <option value="masculino">Masculino</option>
-            <option value="femenino">Femenino</option>
-            <option value="otro">Otro</option>
-          </select>
-          {errors.genero && (
-            <p className="mt-1 text-sm text-red-600">{errors.genero.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Edad
-          </label>
-          <input
-            type="number"
-            {...register('edad', { valueAsNumber: true })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          {errors.edad && (
-            <p className="mt-1 text-sm text-red-600">{errors.edad.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Altura (cm)
-          </label>
-          <input
-            type="number"
-            {...register('altura', { valueAsNumber: true })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          {errors.altura && (
-            <p className="mt-1 text-sm text-red-600">{errors.altura.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Peso (kg)
-          </label>
-          <input
-            type="number"
-            {...register('peso', { valueAsNumber: true })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          {errors.peso && (
-            <p className="mt-1 text-sm text-red-600">{errors.peso.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Teléfono
-          </label>
-          <input
-            type="tel"
-            {...register('telefono')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          {errors.telefono && (
-            <p className="mt-1 text-sm text-red-600">{errors.telefono.message}</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+    <div className="space-y-6">
+      <div>
+        <label htmlFor="genero" className="block text-sm font-medium text-gray-700">
+          ¿Cuál es tu género?
+        </label>
+        <select
+          id="genero"
+          name="genero"
+          value={surveyData.personalInfo.genero}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          Continuar
-        </button>
-      </form>
-    </motion.div>
+          <option value="Masculino">Masculino</option>
+          <option value="Femenino">Femenino</option>
+          <option value="Otro">Otro</option>
+          <option value="Prefiero no decir">Prefiero no decir</option>
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="edad" className="block text-sm font-medium text-gray-700">
+          ¿Cuál es tu edad? (15-100 años)
+        </label>
+        <input
+          type="number"
+          id="edad"
+          name="edad"
+          min="15"
+          max="100"
+          value={surveyData.personalInfo.edad}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="altura" className="block text-sm font-medium text-gray-700">
+          ¿Cuál es tu altura? (100-250 cm)
+        </label>
+        <input
+          type="number"
+          id="altura"
+          name="altura"
+          min="100"
+          max="250"
+          value={surveyData.personalInfo.altura}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="peso" className="block text-sm font-medium text-gray-700">
+          ¿Cuál es tu peso? (30-300 kg)
+        </label>
+        <input
+          type="number"
+          id="peso"
+          name="peso"
+          min="30"
+          max="300"
+          value={surveyData.personalInfo.peso}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="nivelActividad" className="block text-sm font-medium text-gray-700">
+          ¿Cuál es tu nivel actual de actividad física?
+        </label>
+        <select
+          id="nivelActividad"
+          name="nivelActividad"
+          value={surveyData.personalInfo.nivelActividad}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        >
+          <option value="Sedentario">Sedentario (poco o nada de ejercicio)</option>
+          <option value="Moderado">Moderado (ejercicio ligero 1-3 días/semana)</option>
+          <option value="Activo">Activo (ejercicio moderado 3-5 días/semana)</option>
+          <option value="Muy activo">Muy activo (ejercicio intenso 6-7 días/semana)</option>
+          <option value="Extremadamente activo">Extremadamente activo (atletas, actividad física muy intensa)</option>
+        </select>
+      </div>
+    </div>
   );
 };
 

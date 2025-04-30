@@ -11,14 +11,14 @@ class Base(DeclarativeBase):
 
 
 class EstadoMeta(Base):
-    __tablename__ = 'estado_meta'
+    __tablename__ = 'Estado_Meta'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     descripcion: Mapped[Optional[str]] = mapped_column(String(50))
 
 
 class EstadoPlan(Base):
-    __tablename__ = 'estado_plan'
+    __tablename__ = 'Estado_Plan'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     descripcion: Mapped[Optional[str]] = mapped_column(String(50))
@@ -27,14 +27,14 @@ class EstadoPlan(Base):
 
 
 class EstadoRutina(Base):
-    __tablename__ = 'estado_rutina'
+    __tablename__ = 'Estado_Rutina'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     descripcion: Mapped[Optional[str]] = mapped_column(String(50))
 
 
 class RestriccionUsuario(Base):
-    __tablename__ = 'restriccion_usuario'
+    __tablename__ = 'Restriccion_Usuario'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     descripcion: Mapped[Optional[str]] = mapped_column(String(100))
@@ -43,7 +43,7 @@ class RestriccionUsuario(Base):
 
 
 class TipoObjetivo(Base):
-    __tablename__ = 'tipo_objetivo'
+    __tablename__ = 'Tipo_Objetivo'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     descripcion: Mapped[Optional[str]] = mapped_column(String(100))
@@ -52,7 +52,7 @@ class TipoObjetivo(Base):
 
 
 class TipoUsuario(Base):
-    __tablename__ = 'tipo_usuario'
+    __tablename__ = 'Tipo_Usuario'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     descripcion: Mapped[Optional[str]] = mapped_column(String(50))
@@ -61,9 +61,9 @@ class TipoUsuario(Base):
 
 
 class Usuario(Base):
-    __tablename__ = 'usuario'
+    __tablename__ = 'Usuario'
     __table_args__ = (
-        ForeignKeyConstraint(['id_tipo_usuario'], ['tipo_usuario.id'], name='usuario_ibfk_1'),
+        ForeignKeyConstraint(['id_tipo_usuario'], ['Tipo_Usuario.id'], name='usuario_ibfk_1'),
         Index('correo', 'correo', unique=True),
         Index('id_tipo_usuario', 'id_tipo_usuario')
     )
@@ -84,10 +84,10 @@ class Usuario(Base):
 
 
 class MetaUsuario(Base):
-    __tablename__ = 'meta_usuario'
+    __tablename__ = 'Meta_Usuario'
     __table_args__ = (
-        ForeignKeyConstraint(['id_tipo_objetivo'], ['tipo_objetivo.id'], name='meta_usuario_ibfk_2'),
-        ForeignKeyConstraint(['id_usuario'], ['usuario.id'], name='meta_usuario_ibfk_1'),
+        ForeignKeyConstraint(['id_tipo_objetivo'], ['Tipo_Objetivo.id'], name='meta_usuario_ibfk_2'),
+        ForeignKeyConstraint(['id_usuario'], ['Usuario.id'], name='meta_usuario_ibfk_1'),
         Index('id_tipo_objetivo', 'id_tipo_objetivo'),
         Index('id_usuario', 'id_usuario')
     )
@@ -102,9 +102,9 @@ class MetaUsuario(Base):
 
 
 class PerfilUsuario(Base):
-    __tablename__ = 'perfil_usuario'
+    __tablename__ = 'Perfil_Usuario'
     __table_args__ = (
-        ForeignKeyConstraint(['id_usuario'], ['usuario.id'], name='perfil_usuario_ibfk_1'),
+        ForeignKeyConstraint(['id_usuario'], ['Usuario.id'], name='perfil_usuario_ibfk_1'),
         Index('id_usuario', 'id_usuario')
     )
 
@@ -131,10 +131,10 @@ class PerfilUsuario(Base):
 
 
 class PlanDietaUsuario(Base):
-    __tablename__ = 'plan_dieta_usuario'
+    __tablename__ = 'Plan_Dieta_Usuario'
     __table_args__ = (
-        ForeignKeyConstraint(['id_estado_plan'], ['estado_plan.id'], name='plan_dieta_usuario_ibfk_2'),
-        ForeignKeyConstraint(['id_usuario'], ['usuario.id'], name='plan_dieta_usuario_ibfk_1'),
+        ForeignKeyConstraint(['id_estado_plan'], ['Estado_Plan.id'], name='plan_dieta_usuario_ibfk_2'),
+        ForeignKeyConstraint(['id_usuario'], ['Usuario.id'], name='plan_dieta_usuario_ibfk_1'),
         Index('id_estado_plan', 'id_estado_plan'),
         Index('id_usuario', 'id_usuario')
     )
@@ -149,9 +149,9 @@ class PlanDietaUsuario(Base):
 
 
 class PlanRutinaUsuario(Base):
-    __tablename__ = 'plan_rutina_usuario'
+    __tablename__ = 'Plan_Rutina_Usuario'
     __table_args__ = (
-        ForeignKeyConstraint(['id_usuario'], ['usuario.id'], name='plan_rutina_usuario_ibfk_1'),
+        ForeignKeyConstraint(['id_usuario'], ['Usuario.id'], name='plan_rutina_usuario_ibfk_1'),
         Index('id_usuario', 'id_usuario')
     )
 
@@ -164,9 +164,9 @@ class PlanRutinaUsuario(Base):
 
 
 class ProgresoUsuario(Base):
-    __tablename__ = 'progreso_usuario'
+    __tablename__ = 'Progreso_Usuario'
     __table_args__ = (
-        ForeignKeyConstraint(['id_usuario'], ['usuario.id'], name='progreso_usuario_ibfk_1'),
+        ForeignKeyConstraint(['id_usuario'], ['Usuario.id'], name='progreso_usuario_ibfk_1'),
         Index('id_usuario', 'id_usuario')
     )
 
@@ -179,9 +179,9 @@ class ProgresoUsuario(Base):
 
 
 class AlimentosEvitados(Base):
-    __tablename__ = 'alimentos_evitados'
+    __tablename__ = 'Alimentos_Evitados'
     __table_args__ = (
-        ForeignKeyConstraint(['id_perfil'], ['perfil_usuario.id'], name='alimentos_evitados_ibfk_1'),
+        ForeignKeyConstraint(['id_perfil'], ['Perfil_Usuario.id'], name='alimentos_evitados_ibfk_1'),
         Index('id_perfil', 'id_perfil')
     )
 
@@ -193,9 +193,9 @@ class AlimentosEvitados(Base):
 
 
 class CondicionFisica(Base):
-    __tablename__ = 'condicion_fisica'
+    __tablename__ = 'Condicion_Fisica'
     __table_args__ = (
-        ForeignKeyConstraint(['id_perfil'], ['perfil_usuario.id'], name='condicion_fisica_ibfk_1'),
+        ForeignKeyConstraint(['id_perfil'], ['Perfil_Usuario.id'], name='condicion_fisica_ibfk_1'),
         Index('id_perfil', 'id_perfil')
     )
 
@@ -208,9 +208,9 @@ class CondicionFisica(Base):
 
 
 class EjercicioPreferido(Base):
-    __tablename__ = 'ejercicio_preferido'
+    __tablename__ = 'Ejercicio_Preferido'
     __table_args__ = (
-        ForeignKeyConstraint(['id_perfil'], ['perfil_usuario.id'], name='ejercicio_preferido_ibfk_1'),
+        ForeignKeyConstraint(['id_perfil'], ['Perfil_Usuario.id'], name='ejercicio_preferido_ibfk_1'),
         Index('id_perfil', 'id_perfil')
     )
 
@@ -222,9 +222,9 @@ class EjercicioPreferido(Base):
 
 
 class EquipamientoDisponible(Base):
-    __tablename__ = 'equipamiento_disponible'
+    __tablename__ = 'Equipamiento_Disponible'
     __table_args__ = (
-        ForeignKeyConstraint(['id_perfil'], ['perfil_usuario.id'], name='equipamiento_disponible_ibfk_1'),
+        ForeignKeyConstraint(['id_perfil'], ['Perfil_Usuario.id'], name='equipamiento_disponible_ibfk_1'),
         Index('id_perfil', 'id_perfil')
     )
 
@@ -236,9 +236,9 @@ class EquipamientoDisponible(Base):
 
 
 class HabitosDiarios(Base):
-    __tablename__ = 'habitos_diarios'
+    __tablename__ = 'Habitos_Diarios'
     __table_args__ = (
-        ForeignKeyConstraint(['id_perfil'], ['perfil_usuario.id'], name='habitos_diarios_ibfk_1'),
+        ForeignKeyConstraint(['id_perfil'], ['Perfil_Usuario.id'], name='habitos_diarios_ibfk_1'),
         Index('id_perfil', 'id_perfil')
     )
 
@@ -257,9 +257,9 @@ class HabitosDiarios(Base):
 
 
 class HistorialMedico(Base):
-    __tablename__ = 'historial_medico'
+    __tablename__ = 'Historial_Medico'
     __table_args__ = (
-        ForeignKeyConstraint(['id_perfil'], ['perfil_usuario.id'], name='historial_medico_ibfk_1'),
+        ForeignKeyConstraint(['id_perfil'], ['Perfil_Usuario.id'], name='historial_medico_ibfk_1'),
         Index('id_perfil', 'id_perfil')
     )
 
@@ -274,10 +274,10 @@ class HistorialMedico(Base):
 
 
 class PerfilRestriccion(Base):
-    __tablename__ = 'perfil_restriccion'
+    __tablename__ = 'Perfil_Restriccion'
     __table_args__ = (
-        ForeignKeyConstraint(['id_perfil'], ['perfil_usuario.id'], name='perfil_restriccion_ibfk_1'),
-        ForeignKeyConstraint(['id_restriccion'], ['restriccion_usuario.id'], name='perfil_restriccion_ibfk_2'),
+        ForeignKeyConstraint(['id_perfil'], ['Perfil_Usuario.id'], name='perfil_restriccion_ibfk_1'),
+        ForeignKeyConstraint(['id_restriccion'], ['Restriccion_Usuario.id'], name='perfil_restriccion_ibfk_2'),
         Index('id_perfil', 'id_perfil'),
         Index('id_restriccion', 'id_restriccion')
     )
@@ -291,9 +291,9 @@ class PerfilRestriccion(Base):
 
 
 class PreferenciasAlimentarias(Base):
-    __tablename__ = 'preferencias_alimentarias'
+    __tablename__ = 'Preferencias_Alimentarias'
     __table_args__ = (
-        ForeignKeyConstraint(['id_perfil'], ['perfil_usuario.id'], name='preferencias_alimentarias_ibfk_1'),
+        ForeignKeyConstraint(['id_perfil'], ['Perfil_Usuario.id'], name='preferencias_alimentarias_ibfk_1'),
         Index('id_perfil', 'id_perfil')
     )
 
@@ -306,9 +306,9 @@ class PreferenciasAlimentarias(Base):
 
 
 class SeguimientoDieta(Base):
-    __tablename__ = 'seguimiento_dieta'
+    __tablename__ = 'Seguimiento_Dieta'
     __table_args__ = (
-        ForeignKeyConstraint(['id_plan_dieta'], ['plan_dieta_usuario.id'], name='seguimiento_dieta_ibfk_1'),
+        ForeignKeyConstraint(['id_plan_dieta'], ['Plan_Dieta_Usuario.id'], name='seguimiento_dieta_ibfk_1'),
         Index('id_plan_dieta', 'id_plan_dieta')
     )
 
@@ -321,9 +321,9 @@ class SeguimientoDieta(Base):
 
 
 class SeguimientoMeta(Base):
-    __tablename__ = 'seguimiento_meta'
+    __tablename__ = 'Seguimiento_Meta'
     __table_args__ = (
-        ForeignKeyConstraint(['id_meta_usuario'], ['meta_usuario.id'], name='seguimiento_meta_ibfk_1'),
+        ForeignKeyConstraint(['id_meta_usuario'], ['Meta_Usuario.id'], name='seguimiento_meta_ibfk_1'),
         Index('id_meta_usuario', 'id_meta_usuario')
     )
 
@@ -336,9 +336,9 @@ class SeguimientoMeta(Base):
 
 
 class SeguimientoRutina(Base):
-    __tablename__ = 'seguimiento_rutina'
+    __tablename__ = 'Seguimiento_Rutina'
     __table_args__ = (
-        ForeignKeyConstraint(['id_plan_rutina'], ['plan_rutina_usuario.id'], name='seguimiento_rutina_ibfk_1'),
+        ForeignKeyConstraint(['id_plan_rutina'], ['Plan_Rutina_Usuario.id'], name='seguimiento_rutina_ibfk_1'),
         Index('id_plan_rutina', 'id_plan_rutina')
     )
 

@@ -1,54 +1,38 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import usuarios
-from app.routes import perfil_usuario
-from app.routes import meta_usuario
-from app.routes import seguimiento_meta
-from app.routes import habitos_diarios
-from app.routes import historial_medico
-from app.routes import preferencias_alimentarias
-from app.routes import alimentos_evitados
-from app.routes import progreso_usuario
-from app.routes import plan_dieta_usuario
-from app.routes import seguimiento_dieta
-from app.routes import plan_rutina_usuario
-from app.routes import seguimiento_rutina
-from app.routes import ejercicio_preferido
-from app.routes import catalogos
-from app.routes import perfil_restriccion
+from .routes import survey, usuarios
+from .database import engine
+from .models import models_auto as models
 
-app = FastAPI(title="EvolucionaT Backend")
+# Crear las tablas en la base de datos
+models.Base.metadata.create_all(bind=engine)
 
+app = FastAPI()
+
+# Configuración de CORS
 origins = [
-    "http://localhost:3000",  
-    "http://localhost:5173",  
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600
 )
 
-app.include_router(usuarios.router, prefix="/usuarios", tags=["Usuarios"])
-app.include_router(perfil_usuario.router, prefix="/perfil", tags=["Perfil Usuario"])
-app.include_router(meta_usuario.router, prefix="/meta", tags=["Meta Usuario"])
-app.include_router(seguimiento_meta.router, prefix="/seguimiento-meta", tags=["Seguimiento Meta"])
-app.include_router(habitos_diarios.router, prefix="/habitos", tags=["Hábitos Diarios"])
-app.include_router(historial_medico.router, prefix="/historial", tags=["Historial Médico"])
-app.include_router(preferencias_alimentarias.router, prefix="/preferencias", tags=["Preferencias Alimentarias"])
-app.include_router(alimentos_evitados.router, prefix="/evitados", tags=["Alimentos Evitados"])
-app.include_router(progreso_usuario.router, prefix="/progreso", tags=["Progreso Usuario"])
-app.include_router(plan_dieta_usuario.router, prefix="/plan-dieta", tags=["Plan Dieta Usuario"])
-app.include_router(seguimiento_dieta.router, prefix="/seguimiento-dieta", tags=["Seguimiento Dieta"])
-app.include_router(plan_rutina_usuario.router, prefix="/plan-rutina", tags=["Plan Rutina Usuario"])
-app.include_router(seguimiento_rutina.router, prefix="/seguimiento-rutina", tags=["Seguimiento Rutina"])
-app.include_router(ejercicio_preferido.router, prefix="/ejercicio", tags=["Ejercicio Preferido"])
-app.include_router(catalogos.router, prefix="/catalogos", tags=["Catálogos"])
-app.include_router(perfil_restriccion.router, prefix="/perfil-restriccion", tags=["Perfil Restricción"])
+# Incluir los routers
+app.include_router(survey.router, prefix="/api")
+app.include_router(usuarios.router, prefix="/api/usuarios")
 
 @app.get("/")
-def root():
-    return {"message": "¡Bienvenido al backend de EvolucionaT!"}
+async def root():
+    return {"message": "API de EvolucionaT"}

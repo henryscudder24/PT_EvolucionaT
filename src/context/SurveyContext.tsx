@@ -1,18 +1,20 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { toast } from 'react-hot-toast';
 import { 
-  PersonalInfoContextData, 
+  PersonalInfoFormData,
   FoodPreferencesData,
-  GoalsObjectivesData,
-  DailyHabitsData,
   MedicalHistoryData,
-  FitnessLevelData
+  DailyHabitsData,
+  FitnessLevelData,
+  GoalsObjectivesData
 } from '../validationSchemas';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 // Tipos para los datos de la encuesta
 export interface SurveyData {
-  // Sección 1: Perfil de Usuario
-  personalInfo: PersonalInfoContextData;
+  // Sección 1: Información Personal
+  personalInfo: PersonalInfoFormData;
 
   // Sección 2: Preferencias Alimentarias
   foodPreferences: FoodPreferencesData;
@@ -20,7 +22,7 @@ export interface SurveyData {
   // Sección 3: Metas y Objetivos
   goalsObjectives: GoalsObjectivesData;
 
-  // Sección 4: Nivel físico
+  // Sección 4: Nivel de Condición Física
   fitnessLevel: FitnessLevelData;
 
   // Sección 5: Historial Médico
@@ -30,108 +32,69 @@ export interface SurveyData {
   dailyHabits: DailyHabitsData;
 }
 
-interface Question {
-  id: number;
-  text: string;
-  options: string[];
-}
-
 interface SurveyContextType {
   currentStep: number;
   totalSteps: number;
-  currentQuestion: Question | null;
   surveyData: SurveyData;
   updateSurveyData: (data: Partial<SurveyData>) => void;
   nextStep: () => void;
   prevStep: () => void;
-  isLastStep: boolean;
   resetSurvey: () => void;
+  isLastStep: boolean;
   isStepComplete: (step: number) => boolean;
-  finishSurvey: () => void;
-  nextQuestion: () => void;
-  previousQuestion: () => void;
+  finishSurvey: () => Promise<void>;
 }
 
 const SurveyContext = createContext<SurveyContextType | undefined>(undefined);
 
-const questions: Question[] = [
-  {
-    id: 1,
-    text: '¿Cuál es tu nivel de experiencia en el sector energético?',
-    options: ['Principiante', 'Intermedio', 'Avanzado', 'Experto']
-  },
-  {
-    id: 2,
-    text: '¿Qué tipo de proyectos te interesan más?',
-    options: ['Residencial', 'Comercial', 'Industrial', 'Todos los anteriores']
-  },
-  {
-    id: 3,
-    text: '¿Cuál es tu principal objetivo?',
-    options: ['Ahorro energético', 'Sostenibilidad', 'Independencia energética', 'Todos los anteriores']
-  },
-  {
-    id: 4,
-    text: '¿Prefieres formación presencial u online?',
-    options: ['Presencial', 'Online', 'Mixta', 'Indiferente']
-  },
-  {
-    id: 5,
-    text: '¿Cuál es tu presupuesto aproximado?',
-    options: ['Menos de 10.000€', '10.000€ - 50.000€', '50.000€ - 100.000€', 'Más de 100.000€']
-  }
-];
-
 export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = questions.length;
-  const currentQuestion = questions.find(q => q.id === currentStep) || null;
+  const totalSteps = 6;
+  const navigate = useNavigate();
+
   const [surveyData, setSurveyData] = useState<SurveyData>({
     personalInfo: {
-      nombre: '',
-      genero: '',
-      edad: '',
-      altura: '',
-      peso: '',
-      telefono: ''
+      genero: 'Masculino',
+      edad: 18,
+      altura: 170,
+      peso: 70,
+      nivelActividad: 'Moderado'
     },
     foodPreferences: {
       tipoDieta: [],
       alergias: [],
-      alimentosEvitados: [],
-      frecuenciaComida: '',
+      otrosAlergias: '',
+      alimentosFavoritos: [],
+      alimentosEvitar: ''
     },
     goalsObjectives: {
-      mainGoal: '',
-      timeframe: '',
-      commitmentLevel: 3,
-      measurementPreference: [],
+      objetivoPrincipal: 'Mantenimiento de la salud',
+      tiempoMeta: '3-6 meses',
+      nivelCompromiso: 3,
+      medicionProgreso: []
     },
     fitnessLevel: {
-      exerciseFrequency: '',
-      exerciseType: [],
-      availableEquipment: [],
-      availableTime: '',
-      medicalConditions: '',
+      frecuenciaEjercicio: '1-2 veces por semana',
+      tiposEjercicio: [],
+      equipamiento: [],
+      tiempoEjercicio: '30-60 minutos'
     },
     medicalHistory: {
-      hasChronicConditions: false,
-      chronicConditions: [],
-      takingMedication: false,
-      medications: '',
-      recentInjuries: [],
-      familyHistoryIssues: [],
-      allergies: [],
-      additionalNotes: '',
+      condicionesCronicas: [],
+      otrasCondiciones: '',
+      medicamentos: '',
+      lesionesRecientes: '',
+      antecedentesFamiliares: ''
     },
     dailyHabits: {
-      sleepSchedule: '',
-      stressLevel: '',
-      workSchedule: '',
-      dietaryRestrictions: [],
-      mealPreparationTime: '',
-      snackingHabits: '',
-      waterIntake: ''
+      horasSueno: '7-8 horas',
+      calidadSueno: 'Buena',
+      nivelEstres: 'Moderado',
+      consumoAgua: '1-2 litros',
+      comidasPorDia: '3-4',
+      habitosSnacks: '1-2 snacks al día',
+      horasPantallas: '4-8 horas',
+      tipoTrabajo: 'Sedentario'
     }
   });
 
@@ -159,50 +122,47 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCurrentStep(1);
     setSurveyData({
       personalInfo: {
-        nombre: '',
-        genero: '',
-        edad: '',
-        altura: '',
-        peso: '',
-        telefono: ''
+        genero: 'Masculino',
+        edad: 18,
+        altura: 170,
+        peso: 70,
+        nivelActividad: 'Moderado'
       },
       foodPreferences: {
         tipoDieta: [],
         alergias: [],
-        alimentosEvitados: [],
-        frecuenciaComida: '',
+        otrosAlergias: '',
+        alimentosFavoritos: [],
+        alimentosEvitar: ''
       },
       goalsObjectives: {
-        mainGoal: '',
-        timeframe: '',
-        commitmentLevel: 3,
-        measurementPreference: [],
+        objetivoPrincipal: 'Mantenimiento de la salud',
+        tiempoMeta: '3-6 meses',
+        nivelCompromiso: 3,
+        medicionProgreso: []
       },
       fitnessLevel: {
-        exerciseFrequency: '',
-        exerciseType: [],
-        availableEquipment: [],
-        availableTime: '',
-        medicalConditions: '',
+        frecuenciaEjercicio: '1-2 veces por semana',
+        tiposEjercicio: [],
+        equipamiento: [],
+        tiempoEjercicio: '30-60 minutos'
       },
       medicalHistory: {
-        hasChronicConditions: false,
-        chronicConditions: [],
-        takingMedication: false,
-        medications: '',
-        recentInjuries: [],
-        familyHistoryIssues: [],
-        allergies: [],
-        additionalNotes: '',
+        condicionesCronicas: [],
+        otrasCondiciones: '',
+        medicamentos: '',
+        lesionesRecientes: '',
+        antecedentesFamiliares: ''
       },
       dailyHabits: {
-        sleepSchedule: '',
-        stressLevel: '',
-        workSchedule: '',
-        dietaryRestrictions: [],
-        mealPreparationTime: '',
-        snackingHabits: '',
-        waterIntake: ''
+        horasSueno: '7-8 horas',
+        calidadSueno: 'Buena',
+        nivelEstres: 'Moderado',
+        consumoAgua: '1-2 litros',
+        comidasPorDia: '3-4',
+        habitosSnacks: '1-2 snacks al día',
+        horasPantallas: '4-8 horas',
+        tipoTrabajo: 'Sedentario'
       }
     });
     toast.success('Encuesta reiniciada');
@@ -212,74 +172,147 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const isStepComplete = useCallback((step: number): boolean => {
     switch (step) {
-      case 1: // Personal Info
+      case 1: // Información Personal
         return Boolean(
-          surveyData.personalInfo.nombre &&
           surveyData.personalInfo.genero &&
-          surveyData.personalInfo.edad &&
-          surveyData.personalInfo.altura &&
-          surveyData.personalInfo.peso &&
-          surveyData.personalInfo.telefono
+          surveyData.personalInfo.edad >= 15 &&
+          surveyData.personalInfo.edad <= 100 &&
+          surveyData.personalInfo.altura >= 100 &&
+          surveyData.personalInfo.altura <= 250 &&
+          surveyData.personalInfo.peso >= 30 &&
+          surveyData.personalInfo.peso <= 300 &&
+          surveyData.personalInfo.nivelActividad
         );
-      case 2: // Food Preferences
-        return Boolean(surveyData.foodPreferences?.tipoDieta?.length && surveyData.foodPreferences?.frecuenciaComida);
-      case 3: // Goals & Objectives
-        return Boolean(surveyData.goalsObjectives?.mainGoal && surveyData.goalsObjectives?.timeframe);
-      case 4: // Fitness Level
+      case 2: // Preferencias Alimentarias
         return Boolean(
-          surveyData.fitnessLevel?.exerciseFrequency &&
-          surveyData.fitnessLevel?.exerciseType?.length &&
-          surveyData.fitnessLevel?.availableTime
+          surveyData.foodPreferences.tipoDieta.length > 0 &&
+          surveyData.foodPreferences.alimentosFavoritos.length > 0
         );
-      case 5: // Medical History
-        return Boolean(surveyData.medicalHistory?.hasChronicConditions !== undefined);
-      case 6: // Daily Habits
+      case 3: // Metas y Objetivos
         return Boolean(
-          surveyData.dailyHabits.sleepSchedule &&
-          surveyData.dailyHabits.stressLevel &&
-          surveyData.dailyHabits.workSchedule &&
-          surveyData.dailyHabits.mealPreparationTime &&
-          surveyData.dailyHabits.snackingHabits &&
-          surveyData.dailyHabits.waterIntake
+          surveyData.goalsObjectives.objetivoPrincipal &&
+          surveyData.goalsObjectives.tiempoMeta &&
+          surveyData.goalsObjectives.nivelCompromiso >= 1 &&
+          surveyData.goalsObjectives.nivelCompromiso <= 5 &&
+          surveyData.goalsObjectives.medicionProgreso.length > 0
+        );
+      case 4: // Nivel de Condición Física
+        return Boolean(
+          surveyData.fitnessLevel.frecuenciaEjercicio &&
+          surveyData.fitnessLevel.tiposEjercicio.length > 0 &&
+          surveyData.fitnessLevel.equipamiento.length > 0 &&
+          surveyData.fitnessLevel.tiempoEjercicio
+        );
+      case 5: // Historial Médico
+        return true; // Todos los campos son opcionales
+      case 6: // Hábitos Diarios
+        return Boolean(
+          surveyData.dailyHabits.horasSueno &&
+          surveyData.dailyHabits.calidadSueno &&
+          surveyData.dailyHabits.nivelEstres &&
+          surveyData.dailyHabits.consumoAgua &&
+          surveyData.dailyHabits.comidasPorDia &&
+          surveyData.dailyHabits.habitosSnacks &&
+          surveyData.dailyHabits.horasPantallas &&
+          surveyData.dailyHabits.tipoTrabajo
         );
       default:
         return false;
     }
   }, [surveyData]);
 
-  const finishSurvey = useCallback(() => {
-    // Aquí puedes agregar la lógica para finalizar la encuesta
-    toast.success('¡Encuesta completada!');
-  }, []);
+  const finishSurvey = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Debes iniciar sesión para completar la encuesta');
+        navigate('/login');
+        return;
+      }
 
-  const nextQuestion = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
-    }
-  };
+      const response = await axios.post(
+        'http://localhost:8000/api/survey/complete',
+        {
+          personalInfo: {
+            genero: surveyData.personalInfo.genero,
+            edad: surveyData.personalInfo.edad,
+            altura: surveyData.personalInfo.altura,
+            peso: surveyData.personalInfo.peso,
+            nivelActividad: surveyData.personalInfo.nivelActividad
+          },
+          foodPreferences: {
+            tipoDieta: surveyData.foodPreferences.tipoDieta,
+            alergias: surveyData.foodPreferences.alergias,
+            otrosAlergias: surveyData.foodPreferences.otrosAlergias,
+            alimentosFavoritos: surveyData.foodPreferences.alimentosFavoritos,
+            alimentosEvitar: surveyData.foodPreferences.alimentosEvitar
+          },
+          goalsObjectives: {
+            objetivoPrincipal: surveyData.goalsObjectives.objetivoPrincipal,
+            tiempoMeta: surveyData.goalsObjectives.tiempoMeta,
+            nivelCompromiso: surveyData.goalsObjectives.nivelCompromiso,
+            medicionProgreso: surveyData.goalsObjectives.medicionProgreso
+          },
+          fitnessLevel: {
+            frecuenciaEjercicio: surveyData.fitnessLevel.frecuenciaEjercicio,
+            tiposEjercicio: surveyData.fitnessLevel.tiposEjercicio,
+            equipamiento: surveyData.fitnessLevel.equipamiento,
+            tiempoEjercicio: surveyData.fitnessLevel.tiempoEjercicio
+          },
+          medicalHistory: {
+            condicionesCronicas: surveyData.medicalHistory.condicionesCronicas,
+            otrasCondiciones: surveyData.medicalHistory.otrasCondiciones,
+            medicamentos: surveyData.medicalHistory.medicamentos,
+            lesionesRecientes: surveyData.medicalHistory.lesionesRecientes,
+            antecedentesFamiliares: surveyData.medicalHistory.antecedentesFamiliares
+          },
+          dailyHabits: {
+            horasSueno: surveyData.dailyHabits.horasSueno,
+            calidadSueno: surveyData.dailyHabits.calidadSueno,
+            nivelEstres: surveyData.dailyHabits.nivelEstres,
+            consumoAgua: surveyData.dailyHabits.consumoAgua,
+            comidasPorDia: surveyData.dailyHabits.comidasPorDia,
+            habitosSnacks: surveyData.dailyHabits.habitosSnacks,
+            horasPantallas: surveyData.dailyHabits.horasPantallas,
+            tipoTrabajo: surveyData.dailyHabits.tipoTrabajo
+          }
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-  const previousQuestion = () => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      if (response.status === 200) {
+        toast.success('Encuesta completada con éxito');
+        navigate('/profile');
+      }
+    } catch (error: any) {
+      console.error('Error al finalizar la encuesta:', error);
+      if (error.response?.status === 422) {
+        toast.error('Error en el formato de los datos. Por favor, verifica todos los campos.');
+      } else {
+        toast.error('Hubo un error al completar la encuesta');
+      }
+      throw error;
     }
-  };
+  }, [surveyData, navigate]);
 
   return (
     <SurveyContext.Provider
       value={{
         currentStep,
         totalSteps,
-        currentQuestion,
         surveyData,
         updateSurveyData,
         nextStep,
         prevStep,
-        isLastStep,
         resetSurvey,
+        isLastStep,
         isStepComplete,
-        finishSurvey,
-        nextQuestion,
-        previousQuestion
+        finishSurvey
       }}
     >
       {children}

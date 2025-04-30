@@ -1,7 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSurvey } from '../context/SurveyContext';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface SurveyNavigationProps {
   className?: string;
@@ -23,7 +24,7 @@ const SurveyNavigation: React.FC<SurveyNavigationProps> = ({ className = '' }) =
     nextStep,
     isLastStep,
     isStepComplete,
-    finishSurvey
+    surveyData
   } = useSurvey();
   const navigate = useNavigate();
 
@@ -45,51 +46,73 @@ const SurveyNavigation: React.FC<SurveyNavigationProps> = ({ className = '' }) =
     }
   };
 
+  // Función para enviar los datos al backend
+  const submitSurvey = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Debes iniciar sesión para completar la encuesta');
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.post(
+        'http://localhost:8000/api/survey/complete',
+        surveyData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success('¡Encuesta completada con éxito!');
+        navigate('/profile');
+      }
+    } catch (error) {
+      console.error('Error al enviar la encuesta:', error);
+      toast.error('Error al guardar la encuesta. Por favor, intenta nuevamente.');
+    }
+  };
+
   // Función para manejar el botón de siguiente o finalizar
   const handleNextOrFinish = () => {
     if (isLastStep) {
-      // Finaliza la encuesta
-      finishSurvey();
-      // Muestra mensaje de éxito
-      toast.success('¡Encuesta completada con éxito! Gracias por participar.');
-      // Redirige a perfil de usuario
-      navigate('/profile');
+      submitSurvey();
     } else {
       handleNext();
     }
   };
 
   return (
-    <div className={`flex flex-col items-center gap-4 ${className}`}>
-      {/* Mensaje motivacional */}
-      <p className="text-center text-gray-600 italic">
-        {currentMessage}
-      </p>
-
-      {/* Botones de navegación */}
-      <div className="flex gap-4">
-        <button
-          onClick={handlePrev}
-          disabled={currentStep === 1}
-          className={`px-4 py-2 rounded-md ${
-            currentStep === 1
-              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Anterior
-        </button>
-        <button
-          onClick={handleNextOrFinish}
-          disabled={!isStepComplete(currentStep)}
-          className={`px-4 py-2 rounded-md ${
-            !isStepComplete(currentStep)
-              ? 'bg-blue-200 text-blue-500 cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-        >
-          {isLastStep ? 'Finalizar' : 'Siguiente'}
-        </button>
+    <div className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 ${className}`}>
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div className="text-sm text-gray-600">
+          {currentMessage}
+        </div>
+        <div className="flex space-x-4">
+          {currentStep > 1 && (
+            <button
+              onClick={handlePrev}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Anterior
+            </button>
+          )}
+          <button
+            onClick={handleNextOrFinish}
+            disabled={!isStepComplete(currentStep)}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+              isStepComplete(currentStep)
+                ? 'bg-primary hover:bg-primary-dark'
+                : 'bg-gray-300 cursor-not-allowed'
+            }`}
+          >
+            {isLastStep ? 'Finalizar' : 'Siguiente'}
+          </button>
+        </div>
       </div>
     </div>
   );

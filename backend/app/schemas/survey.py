@@ -22,7 +22,7 @@ class FoodPreferences(BaseModel):
 class GoalsObjectives(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
-    objetivoPrincipal: str
+    objetivoPrincipal: List[str]
     tiempoMeta: str
     nivelCompromiso: int
     medicionProgreso: List[str]

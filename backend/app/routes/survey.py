@@ -6,6 +6,7 @@ from ..database import get_db
 from ..models import models_auto as models
 from ..schemas import survey as schemas
 from ..auth import get_current_user
+from sqlalchemy.sql import func
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -44,9 +45,11 @@ async def complete_survey(
                 altura=survey_data.personalInfo.altura,
                 peso=survey_data.personalInfo.peso,
                 nivel_actividad=survey_data.personalInfo.nivelActividad,
-                objetivo_principal=survey_data.goalsObjectives.objetivoPrincipal,
+                objetivo_principal=','.join(survey_data.goalsObjectives.objetivoPrincipal),
                 tiempo_meta=survey_data.goalsObjectives.tiempoMeta,
-                nivel_compromiso=survey_data.goalsObjectives.nivelCompromiso
+                nivel_compromiso=survey_data.goalsObjectives.nivelCompromiso,
+                created_at=func.now(),
+                updated_at=func.now()
             )
             db.add(perfil)
             db.flush()
@@ -58,9 +61,10 @@ async def complete_survey(
             perfil.altura = survey_data.personalInfo.altura
             perfil.peso = survey_data.personalInfo.peso
             perfil.nivel_actividad = survey_data.personalInfo.nivelActividad
-            perfil.objetivo_principal = survey_data.goalsObjectives.objetivoPrincipal
+            perfil.objetivo_principal = ','.join(survey_data.goalsObjectives.objetivoPrincipal)
             perfil.tiempo_meta = survey_data.goalsObjectives.tiempoMeta
             perfil.nivel_compromiso = survey_data.goalsObjectives.nivelCompromiso
+            perfil.updated_at = func.now()
             db.flush()
             logger.info("Perfil de usuario actualizado exitosamente")
 

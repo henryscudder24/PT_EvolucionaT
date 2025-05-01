@@ -75,6 +75,7 @@ const UserProfile: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log('Respuesta del estado de la encuesta:', response.data);
       setSurveyStatus(response.data);
     } catch (error) {
       console.error('Error al obtener estado de la encuesta:', error);

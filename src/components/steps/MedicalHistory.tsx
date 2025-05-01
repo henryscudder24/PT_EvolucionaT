@@ -10,16 +10,29 @@ const MedicalHistory: React.FC = () => {
 
   const handleMultiSelect = (value: CondicionCronicaType) => {
     const currentValues = surveyData.medicalHistory.condicionesCronicas;
-    const newValues = currentValues.includes(value)
-      ? currentValues.filter(v => v !== value)
-      : [...currentValues, value];
+    
+    if (value === 'Ninguna') {
+      // Si se selecciona 'Ninguna', limpiar todas las demás selecciones
+      updateSurveyData({
+        medicalHistory: {
+          ...surveyData.medicalHistory,
+          condicionesCronicas: ['Ninguna'],
+          otrasCondiciones: ''
+        }
+      });
+    } else {
+      // Si se selecciona otra opción, remover 'Ninguna' si está presente
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter(v => v !== value)
+        : [...currentValues.filter(v => v !== 'Ninguna'), value];
 
-    updateSurveyData({
-      medicalHistory: {
-        ...surveyData.medicalHistory,
-        condicionesCronicas: newValues
-      }
-    });
+      updateSurveyData({
+        medicalHistory: {
+          ...surveyData.medicalHistory,
+          condicionesCronicas: newValues
+        }
+      });
+    }
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -40,6 +53,7 @@ const MedicalHistory: React.FC = () => {
         </label>
         <div className="grid grid-cols-2 gap-2">
           {[
+            'Ninguna',
             'Diabetes',
             'Hipertensión',
             'Problemas cardíacos',

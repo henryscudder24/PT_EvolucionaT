@@ -38,6 +38,7 @@ export const foodPreferencesFormSchema = z.object({
     'Sin lactosa'
   ])).min(1, 'Selecciona al menos un tipo de dieta'),
   alergias: z.array(z.enum([
+    'Ninguna',
     'Frutos secos',
     'Lácteos',
     'Mariscos',
@@ -57,23 +58,23 @@ export const foodPreferencesFormSchema = z.object({
     'Arroz',
     'Legumbres',
     'Lácteos',
-    'Snacks saludables'
+    'Snacks saludables',
+    'Otros'
   ])).min(1, 'Selecciona al menos un alimento favorito'),
+  otrosAlimentosFavoritos: z.string().optional(),
   alimentosEvitar: z.string().optional()
 });
 
 // Schema for goals and objectives
 export const goalsObjectivesSchema = z.object({
-  objetivoPrincipal: z.enum([
+  objetivoPrincipal: z.array(z.enum([
     'Pérdida de peso',
     'Ganancia de masa muscular',
     'Mejora de la resistencia',
     'Mejora de la flexibilidad',
     'Mantenimiento de la salud',
     'Rendimiento deportivo'
-  ], {
-    required_error: 'El objetivo principal es requerido'
-  }),
+  ])).min(1, 'Selecciona al menos un objetivo principal'),
   tiempoMeta: z.enum([
     '1-3 meses',
     '3-6 meses',
@@ -88,9 +89,11 @@ export const goalsObjectivesSchema = z.object({
   medicionProgreso: z.array(z.enum([
     'Peso corporal',
     'Medidas corporales',
-    'Fotos de progreso',
-    'Rendimiento en ejercicios',
-    'Niveles de energía',
+    'Tasa metabólica basal (TMB)',
+    'IMC (Índice de Masa Corporal)',
+    'Relación cintura-cadera (WHR)',
+    '1RM y cargas máximas',
+    'Frecuencia cardíaca en reposo',
     'Calidad del sueño'
   ])).min(1, 'Selecciona al menos una forma de medir el progreso')
 });
@@ -133,6 +136,7 @@ export const fitnessLevelSchema = z.object({
 // Schema for medical history
 export const medicalHistorySchema = z.object({
   condicionesCronicas: z.array(z.enum([
+    'Ninguna',
     'Diabetes',
     'Hipertensión',
     'Problemas cardíacos',

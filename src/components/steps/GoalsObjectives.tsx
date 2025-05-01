@@ -3,7 +3,7 @@ import { useSurvey } from '../../context/SurveyContext';
 import { GoalsObjectivesData } from '../../validationSchemas';
 import ContinueButton from '../ContinueButton';
 
-type ObjetivoPrincipalType = GoalsObjectivesData['objetivoPrincipal'];
+type ObjetivoPrincipalType = GoalsObjectivesData['objetivoPrincipal'][number];
 type TiempoMetaType = GoalsObjectivesData['tiempoMeta'];
 type MedicionProgresoType = GoalsObjectivesData['medicionProgreso'][number];
 
@@ -30,6 +30,20 @@ const GoalsObjectives: React.FC = () => {
     });
   };
 
+  const handleObjetivoPrincipalChange = (value: ObjetivoPrincipalType) => {
+    const currentValues = surveyData.goalsObjectives.objetivoPrincipal;
+    const newValues = currentValues.includes(value)
+      ? currentValues.filter(v => v !== value)
+      : [...currentValues, value];
+
+    updateSurveyData({
+      goalsObjectives: {
+        ...surveyData.goalsObjectives,
+        objetivoPrincipal: newValues
+      }
+    });
+  };
+
   const handleMedicionProgresoChange = (value: MedicionProgresoType) => {
     const currentValues = surveyData.goalsObjectives.medicionProgreso;
     const newValues = currentValues.includes(value)
@@ -47,23 +61,29 @@ const GoalsObjectives: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <label htmlFor="objetivoPrincipal" className="block text-sm font-medium text-gray-700">
-          ¿Cuál es tu objetivo principal?
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          ¿Cuál es tu objetivo principal? (Selección múltiple)
         </label>
-        <select
-          id="objetivoPrincipal"
-          name="objetivoPrincipal"
-          value={surveyData.goalsObjectives.objetivoPrincipal}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option value="Pérdida de peso">Pérdida de peso</option>
-          <option value="Ganancia de masa muscular">Ganancia de masa muscular</option>
-          <option value="Mejora de la resistencia">Mejora de la resistencia</option>
-          <option value="Mejora de la flexibilidad">Mejora de la flexibilidad</option>
-          <option value="Mantenimiento de la salud">Mantenimiento de la salud</option>
-          <option value="Rendimiento deportivo">Rendimiento deportivo</option>
-        </select>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            'Pérdida de peso',
+            'Ganancia de masa muscular',
+            'Mejora de la resistencia',
+            'Mejora de la flexibilidad',
+            'Mantenimiento de la salud',
+            'Rendimiento deportivo'
+          ].map(objetivo => (
+            <label key={objetivo} className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={surveyData.goalsObjectives.objetivoPrincipal.includes(objetivo as ObjetivoPrincipalType)}
+                onChange={() => handleObjetivoPrincipalChange(objetivo as ObjetivoPrincipalType)}
+                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">{objetivo}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       <div>
@@ -115,9 +135,11 @@ const GoalsObjectives: React.FC = () => {
           {[
             'Peso corporal',
             'Medidas corporales',
-            'Fotos de progreso',
-            'Rendimiento en ejercicios',
-            'Niveles de energía',
+            'Tasa metabólica basal (TMB)',
+            'IMC (Índice de Masa Corporal)',
+            'Relación cintura-cadera (WHR)',
+            '1RM y cargas máximas',
+            'Frecuencia cardíaca en reposo',
             'Calidad del sueño'
           ].map(medicion => (
             <label key={medicion} className="inline-flex items-center">

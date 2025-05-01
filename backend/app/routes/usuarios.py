@@ -106,13 +106,17 @@ async def get_survey_status(current_user: models.Usuario = Depends(get_current_u
             
         # Verificar si tiene datos básicos del perfil
         has_basic_info = all([
-            perfil.genero,
-            perfil.edad,
-            perfil.peso,
-            perfil.altura,
-            perfil.nivel_actividad
+            perfil.genero is not None and perfil.genero != '',
+            perfil.edad is not None and perfil.edad > 0,
+            perfil.peso is not None and perfil.peso > 0,
+            perfil.altura is not None and perfil.altura > 0,
+            perfil.nivel_actividad is not None and perfil.nivel_actividad != '',
+            perfil.objetivo_principal is not None and perfil.objetivo_principal != '',
+            perfil.tiempo_meta is not None and perfil.tiempo_meta != '',
+            perfil.nivel_compromiso is not None and perfil.nivel_compromiso > 0
         ])
         logger.info(f"Tiene información básica: {has_basic_info}")
+        logger.info(f"Detalles de información básica: genero={perfil.genero}, edad={perfil.edad}, peso={perfil.peso}, altura={perfil.altura}, nivel_actividad={perfil.nivel_actividad}, objetivo_principal={perfil.objetivo_principal}, tiempo_meta={perfil.tiempo_meta}, nivel_compromiso={perfil.nivel_compromiso}")
         
         # Verificar si tiene preferencias alimentarias
         has_food_preferences = db.query(models.PreferenciasAlimentarias).filter(
@@ -132,12 +136,32 @@ async def get_survey_status(current_user: models.Usuario = Depends(get_current_u
         ).first() is not None
         logger.info(f"Tiene hábitos diarios: {has_habits}")
         
-        completed = all([has_basic_info, has_food_preferences, has_fitness, has_habits])
-        logger.info(f"Encuesta completada: {completed}")
+        # Verificar si tiene ejercicios preferidos
+        has_exercises = db.query(models.EjercicioPreferido).filter(
+            models.EjercicioPreferido.id_perfil == perfil.id
+        ).first() is not None
+        logger.info(f"Tiene ejercicios preferidos: {has_exercises}")
+        
+        # Verificar si tiene equipamiento
+        has_equipment = db.query(models.EquipamientoDisponible).filter(
+            models.EquipamientoDisponible.id_perfil == perfil.id
+        ).first() is not None
+        logger.info(f"Tiene equipamiento: {has_equipment}")
+        
+        completed = all([
+            has_basic_info,
+            has_food_preferences,
+            has_fitness,
+            has_habits,
+            has_exercises,
+            has_equipment
+        ])
+        logger.info(f"Estado final de la encuesta: completed={completed}")
+        logger.info(f"Detalles de verificación: basic_info={has_basic_info}, food_preferences={has_food_preferences}, fitness={has_fitness}, habits={has_habits}, exercises={has_exercises}, equipment={has_equipment}")
         
         return {
             "completed": completed,
-            "last_updated": None
+            "last_updated": perfil.updated_at.isoformat() if hasattr(perfil, 'updated_at') and perfil.updated_at else None
         }
         
     except Exception as e:

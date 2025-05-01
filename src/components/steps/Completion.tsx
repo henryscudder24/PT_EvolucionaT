@@ -1,9 +1,11 @@
 import React from 'react';
 import { useSurvey } from '../../context/SurveyContext';
+import { useAuth } from '../../context/AuthContext';
 import ContinueButton from '../ContinueButton';
 
 const Completion: React.FC = () => {
   const { finishSurvey } = useSurvey();
+  const { user } = useAuth();
 
   return (
     <div className="text-center">
@@ -99,8 +101,9 @@ const Completion: React.FC = () => {
       </div>
 
       <ContinueButton
-        message="¡Completar encuesta!"
+        message={`Estás cada vez más cerca de alcanzar tus objetivos ${user?.nombre || ''}`}
         onContinue={finishSurvey}
+        buttonText="Ir al siguiente paso"
       />
     </div>
   );

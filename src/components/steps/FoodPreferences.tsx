@@ -9,6 +9,7 @@ type AlimentoFavoritoType = FoodPreferencesData['alimentosFavoritos'][number];
 
 const FoodPreferences: React.FC = () => {
   const { surveyData, updateSurveyData, nextStep } = useSurvey();
+  const [showOtherFood, setShowOtherFood] = React.useState(false);
 
   const handleMultiSelect = (
     name: keyof Pick<FoodPreferencesData, 'tipoDieta' | 'alergias' | 'alimentosFavoritos'>,
@@ -25,6 +26,11 @@ const FoodPreferences: React.FC = () => {
         [name]: newValues
       }
     });
+
+    // Mostrar/ocultar campo de texto para otros alimentos favoritos
+    if (name === 'alimentosFavoritos') {
+      setShowOtherFood(newValues.includes('Otros'));
+    }
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,6 +79,7 @@ const FoodPreferences: React.FC = () => {
         </label>
         <div className="grid grid-cols-2 gap-2">
           {[
+            'Ninguna',
             'Frutos secos',
             'Lácteos',
             'Mariscos',
@@ -119,7 +126,8 @@ const FoodPreferences: React.FC = () => {
             'Arroz',
             'Legumbres',
             'Lácteos',
-            'Snacks saludables'
+            'Snacks saludables',
+            'Otros'
           ].map(alimento => (
             <label key={alimento} className="inline-flex items-center">
               <input
@@ -132,6 +140,16 @@ const FoodPreferences: React.FC = () => {
             </label>
           ))}
         </div>
+        {showOtherFood && (
+          <textarea
+            name="otrosAlimentosFavoritos"
+            value={surveyData.foodPreferences.otrosAlimentosFavoritos}
+            onChange={handleTextChange}
+            placeholder="Especifica otros alimentos favoritos"
+            className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            rows={2}
+          />
+        )}
       </div>
 
       <div>

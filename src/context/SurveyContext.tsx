@@ -68,7 +68,7 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       alimentosEvitar: ''
     },
     goalsObjectives: {
-      objetivoPrincipal: 'Mantenimiento de la salud',
+      objetivoPrincipal: ['Mantenimiento de la salud'],
       tiempoMeta: '3-6 meses',
       nivelCompromiso: 3,
       medicionProgreso: []
@@ -135,7 +135,7 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         alimentosEvitar: ''
       },
       goalsObjectives: {
-        objetivoPrincipal: 'Mantenimiento de la salud',
+        objetivoPrincipal: ['Mantenimiento de la salud'],
         tiempoMeta: '3-6 meses',
         nivelCompromiso: 3,
         medicionProgreso: []
@@ -173,42 +173,62 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       case 1:
         return !!(
           surveyData.personalInfo.genero &&
+          surveyData.personalInfo.genero !== '' &&
           surveyData.personalInfo.edad &&
+          surveyData.personalInfo.edad > 0 &&
           surveyData.personalInfo.altura &&
+          surveyData.personalInfo.altura > 0 &&
           surveyData.personalInfo.peso &&
-          surveyData.personalInfo.nivelActividad
+          surveyData.personalInfo.peso > 0 &&
+          surveyData.personalInfo.nivelActividad &&
+          surveyData.personalInfo.nivelActividad !== ''
         );
       case 2:
         return !!(
           surveyData.foodPreferences.tipoDieta.length > 0 &&
-          surveyData.foodPreferences.alimentosFavoritos.length > 0
+          surveyData.foodPreferences.alimentosFavoritos.length > 0 &&
+          // Si hay "Otros" en alergias, debe tener texto en otrosAlergias
+          (!surveyData.foodPreferences.alergias.includes('Otros') || 
+           (surveyData.foodPreferences.alergias.includes('Otros') && surveyData.foodPreferences.otrosAlergias.trim() !== ''))
         );
       case 3:
         return !!(
-          surveyData.goalsObjectives.objetivoPrincipal &&
+          surveyData.goalsObjectives.objetivoPrincipal.length > 0 &&
           surveyData.goalsObjectives.tiempoMeta &&
+          surveyData.goalsObjectives.tiempoMeta !== '' &&
           surveyData.goalsObjectives.nivelCompromiso &&
+          surveyData.goalsObjectives.nivelCompromiso > 0 &&
           surveyData.goalsObjectives.medicionProgreso.length > 0
         );
       case 4:
         return !!(
           surveyData.fitnessLevel.frecuenciaEjercicio &&
+          surveyData.fitnessLevel.frecuenciaEjercicio !== '' &&
           surveyData.fitnessLevel.tiposEjercicio.length > 0 &&
           surveyData.fitnessLevel.equipamiento.length > 0 &&
-          surveyData.fitnessLevel.tiempoEjercicio
+          surveyData.fitnessLevel.tiempoEjercicio &&
+          surveyData.fitnessLevel.tiempoEjercicio !== ''
         );
       case 5:
         return true; // El historial médico es opcional
       case 6:
         return !!(
           surveyData.dailyHabits.horasSueno &&
+          surveyData.dailyHabits.horasSueno !== '' &&
           surveyData.dailyHabits.calidadSueno &&
+          surveyData.dailyHabits.calidadSueno !== '' &&
           surveyData.dailyHabits.nivelEstres &&
+          surveyData.dailyHabits.nivelEstres !== '' &&
           surveyData.dailyHabits.consumoAgua &&
+          surveyData.dailyHabits.consumoAgua !== '' &&
           surveyData.dailyHabits.comidasPorDia &&
+          surveyData.dailyHabits.comidasPorDia !== '' &&
           surveyData.dailyHabits.habitosSnacks &&
+          surveyData.dailyHabits.habitosSnacks !== '' &&
           surveyData.dailyHabits.horasPantallas &&
-          surveyData.dailyHabits.tipoTrabajo
+          surveyData.dailyHabits.horasPantallas !== '' &&
+          surveyData.dailyHabits.tipoTrabajo &&
+          surveyData.dailyHabits.tipoTrabajo !== ''
         );
       case 7:
         return true; // La pantalla de finalización siempre está completa

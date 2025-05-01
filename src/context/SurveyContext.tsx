@@ -49,7 +49,7 @@ const SurveyContext = createContext<SurveyContextType | undefined>(undefined);
 
 export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 6;
+  const totalSteps = 7;
   const navigate = useNavigate();
 
   const [surveyData, setSurveyData] = useState<SurveyData>({
@@ -108,7 +108,6 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const nextStep = useCallback(() => {
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
-      toast.success(`Paso ${currentStep} completado`);
     }
   }, [currentStep, totalSteps]);
 
@@ -165,48 +164,43 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         tipoTrabajo: 'Sedentario'
       }
     });
-    toast.success('Encuesta reiniciada');
   }, []);
 
   const isLastStep = currentStep === totalSteps;
 
   const isStepComplete = useCallback((step: number): boolean => {
     switch (step) {
-      case 1: // Información Personal
-        return Boolean(
+      case 1:
+        return !!(
           surveyData.personalInfo.genero &&
-          surveyData.personalInfo.edad >= 15 &&
-          surveyData.personalInfo.edad <= 100 &&
-          surveyData.personalInfo.altura >= 100 &&
-          surveyData.personalInfo.altura <= 250 &&
-          surveyData.personalInfo.peso >= 30 &&
-          surveyData.personalInfo.peso <= 300 &&
+          surveyData.personalInfo.edad &&
+          surveyData.personalInfo.altura &&
+          surveyData.personalInfo.peso &&
           surveyData.personalInfo.nivelActividad
         );
-      case 2: // Preferencias Alimentarias
-        return Boolean(
+      case 2:
+        return !!(
           surveyData.foodPreferences.tipoDieta.length > 0 &&
           surveyData.foodPreferences.alimentosFavoritos.length > 0
         );
-      case 3: // Metas y Objetivos
-        return Boolean(
+      case 3:
+        return !!(
           surveyData.goalsObjectives.objetivoPrincipal &&
           surveyData.goalsObjectives.tiempoMeta &&
-          surveyData.goalsObjectives.nivelCompromiso >= 1 &&
-          surveyData.goalsObjectives.nivelCompromiso <= 5 &&
+          surveyData.goalsObjectives.nivelCompromiso &&
           surveyData.goalsObjectives.medicionProgreso.length > 0
         );
-      case 4: // Nivel de Condición Física
-        return Boolean(
+      case 4:
+        return !!(
           surveyData.fitnessLevel.frecuenciaEjercicio &&
           surveyData.fitnessLevel.tiposEjercicio.length > 0 &&
           surveyData.fitnessLevel.equipamiento.length > 0 &&
           surveyData.fitnessLevel.tiempoEjercicio
         );
-      case 5: // Historial Médico
-        return true; // Todos los campos son opcionales
-      case 6: // Hábitos Diarios
-        return Boolean(
+      case 5:
+        return true; // El historial médico es opcional
+      case 6:
+        return !!(
           surveyData.dailyHabits.horasSueno &&
           surveyData.dailyHabits.calidadSueno &&
           surveyData.dailyHabits.nivelEstres &&
@@ -216,6 +210,8 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           surveyData.dailyHabits.horasPantallas &&
           surveyData.dailyHabits.tipoTrabajo
         );
+      case 7:
+        return true; // La pantalla de finalización siempre está completa
       default:
         return false;
     }
@@ -232,73 +228,24 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       const response = await axios.post(
         'http://localhost:8000/api/survey/complete',
-        {
-          personalInfo: {
-            genero: surveyData.personalInfo.genero,
-            edad: surveyData.personalInfo.edad,
-            altura: surveyData.personalInfo.altura,
-            peso: surveyData.personalInfo.peso,
-            nivelActividad: surveyData.personalInfo.nivelActividad
-          },
-          foodPreferences: {
-            tipoDieta: surveyData.foodPreferences.tipoDieta,
-            alergias: surveyData.foodPreferences.alergias,
-            otrosAlergias: surveyData.foodPreferences.otrosAlergias,
-            alimentosFavoritos: surveyData.foodPreferences.alimentosFavoritos,
-            alimentosEvitar: surveyData.foodPreferences.alimentosEvitar
-          },
-          goalsObjectives: {
-            objetivoPrincipal: surveyData.goalsObjectives.objetivoPrincipal,
-            tiempoMeta: surveyData.goalsObjectives.tiempoMeta,
-            nivelCompromiso: surveyData.goalsObjectives.nivelCompromiso,
-            medicionProgreso: surveyData.goalsObjectives.medicionProgreso
-          },
-          fitnessLevel: {
-            frecuenciaEjercicio: surveyData.fitnessLevel.frecuenciaEjercicio,
-            tiposEjercicio: surveyData.fitnessLevel.tiposEjercicio,
-            equipamiento: surveyData.fitnessLevel.equipamiento,
-            tiempoEjercicio: surveyData.fitnessLevel.tiempoEjercicio
-          },
-          medicalHistory: {
-            condicionesCronicas: surveyData.medicalHistory.condicionesCronicas,
-            otrasCondiciones: surveyData.medicalHistory.otrasCondiciones,
-            medicamentos: surveyData.medicalHistory.medicamentos,
-            lesionesRecientes: surveyData.medicalHistory.lesionesRecientes,
-            antecedentesFamiliares: surveyData.medicalHistory.antecedentesFamiliares
-          },
-          dailyHabits: {
-            horasSueno: surveyData.dailyHabits.horasSueno,
-            calidadSueno: surveyData.dailyHabits.calidadSueno,
-            nivelEstres: surveyData.dailyHabits.nivelEstres,
-            consumoAgua: surveyData.dailyHabits.consumoAgua,
-            comidasPorDia: surveyData.dailyHabits.comidasPorDia,
-            habitosSnacks: surveyData.dailyHabits.habitosSnacks,
-            horasPantallas: surveyData.dailyHabits.horasPantallas,
-            tipoTrabajo: surveyData.dailyHabits.tipoTrabajo
-          }
-        },
+        surveyData,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${token}`
           }
         }
       );
 
       if (response.status === 200) {
-        toast.success('Encuesta completada con éxito');
+        toast.success('¡Encuesta completada con éxito!');
+        resetSurvey();
         navigate('/profile');
       }
-    } catch (error: any) {
-      console.error('Error al finalizar la encuesta:', error);
-      if (error.response?.status === 422) {
-        toast.error('Error en el formato de los datos. Por favor, verifica todos los campos.');
-      } else {
-        toast.error('Hubo un error al completar la encuesta');
-      }
-      throw error;
+    } catch (error) {
+      console.error('Error al completar la encuesta:', error);
+      toast.error('Hubo un error al completar la encuesta. Por favor, intenta nuevamente.');
     }
-  }, [surveyData, navigate]);
+  }, [surveyData, navigate, resetSurvey]);
 
   return (
     <SurveyContext.Provider

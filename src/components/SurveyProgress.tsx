@@ -6,50 +6,51 @@ interface SurveyProgressProps {
 }
 
 const SurveyProgress: React.FC<SurveyProgressProps> = ({ className = '' }) => {
-  const { currentStep, totalSteps } = useSurvey();
-  const progress = (currentStep / totalSteps) * 100;
+  const { currentStep, totalSteps, isStepComplete } = useSurvey();
 
-  // Definir los nombres de los pasos
-  const stepNames = [
-    'Información Personal',
-    'Preferencias',
-    'Objetivos',
-    'Adaptación'
+  const steps = [
+    { number: 1, label: 'Personal' },
+    { number: 2, label: 'Alimentación' },
+    { number: 3, label: 'Metas' },
+    { number: 4, label: 'Fitness' },
+    { number: 5, label: 'Médico' },
+    { number: 6, label: 'Hábitos' },
+    { number: 7, label: 'Final' }
   ];
 
   return (
-    <div className={`w-full ${className}`}>
-      <div className="flex justify-between mb-2">
-        <span className="text-sm font-medium text-gray-700">
-          Progreso: {Math.round(progress)}%
-        </span>
-        <span className="text-sm font-medium text-gray-700">
-          Paso {currentStep} de {totalSteps}
-        </span>
-      </div>
-      {/* Barra de progreso */}
-      <div className="w-full bg-gray-200 rounded-full h-2.5">
-        <div
-          className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+    <div className={`flex justify-between items-center ${className}`}>
+      {steps.map((step) => {
+        const isActive = currentStep === step.number;
+        const isCompleted = currentStep > step.number || isStepComplete(step.number);
+        const isLast = step.number === totalSteps;
 
-      {/* Nombres de los pasos */}
-      <div className="flex justify-between text-sm text-gray-600">
-        {stepNames.map((name, index) => (
-          <div
-            key={index}
-            className={`text-center ${
-              index + 1 <= currentStep
-                ? 'text-blue-600 font-medium'
-                : 'text-gray-400'
-            }`}
-          >
-            {name}
-          </div>
-        ))}
-      </div>
+        return (
+          <React.Fragment key={step.number}>
+            <div className="flex flex-col items-center">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
+                  ${isActive ? 'bg-blue-600 text-white' : ''}
+                  ${isCompleted ? 'bg-green-500 text-white' : ''}
+                  ${!isActive && !isCompleted ? 'bg-gray-200 text-gray-600' : ''}
+                `}
+              >
+                {isCompleted ? '✓' : step.number}
+              </div>
+              <span className="text-xs mt-1 text-gray-600">{step.label}</span>
+            </div>
+            {!isLast && (
+              <div className="flex-1 h-0.5 mx-2">
+                <div
+                  className={`h-full ${
+                    isCompleted ? 'bg-green-500' : 'bg-gray-200'
+                  }`}
+                />
+              </div>
+            )}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 };

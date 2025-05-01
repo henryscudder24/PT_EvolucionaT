@@ -1,13 +1,14 @@
 import React from 'react';
 import { useSurvey } from '../../context/SurveyContext';
 import { GoalsObjectivesData } from '../../validationSchemas';
+import ContinueButton from '../ContinueButton';
 
 type ObjetivoPrincipalType = GoalsObjectivesData['objetivoPrincipal'];
 type TiempoMetaType = GoalsObjectivesData['tiempoMeta'];
 type MedicionProgresoType = GoalsObjectivesData['medicionProgreso'][number];
 
 const GoalsObjectives: React.FC = () => {
-  const { surveyData, updateSurveyData } = useSurvey();
+  const { surveyData, updateSurveyData, nextStep } = useSurvey();
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -131,6 +132,11 @@ const GoalsObjectives: React.FC = () => {
           ))}
         </div>
       </div>
+
+      <ContinueButton
+        message="¡Muy bien! Tus objetivos son la guía para crear un plan efectivo y personalizado."
+        onContinue={nextStep}
+      />
     </div>
   );
 };

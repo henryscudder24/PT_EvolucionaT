@@ -1,77 +1,107 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSurvey } from '../../context/SurveyContext';
-import { toast } from 'react-hot-toast';
+import ContinueButton from '../ContinueButton';
 
 const Completion: React.FC = () => {
-  const navigate = useNavigate();
-  const { resetSurvey } = useSurvey();
-
-  const handleReturnToProfile = () => {
-    resetSurvey();
-    navigate('/profile');
-    toast.success('¡Encuesta completada con éxito!');
-  };
+  const { finishSurvey } = useSurvey();
 
   return (
-    <div className="max-w-2xl mx-auto text-center">
+    <div className="text-center">
       <div className="mb-8">
-        <svg
-          className="mx-auto h-16 w-16 text-green-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
+        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg
+            className="w-10 h-10 text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+          ¡Felicidades!
+        </h3>
+        <p className="text-gray-600 mb-6">
+          Has completado la encuesta de salud y bienestar. Con esta información,
+          podremos crear un plan personalizado para ayudarte a alcanzar tus objetivos.
+        </p>
       </div>
 
-      <h2 className="text-3xl font-bold mb-4">¡Encuesta Completada!</h2>
-      
-      <p className="text-lg text-gray-600 mb-8">
-        Gracias por completar la encuesta. Ahora podemos crear recomendaciones personalizadas para ti.
-      </p>
-
-      <div className="space-y-4">
-        <p className="text-gray-700">
-          En los próximos días recibirás:
-        </p>
-        <ul className="text-left max-w-md mx-auto space-y-2">
-          <li className="flex items-center">
-            <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      <div className="bg-blue-50 rounded-lg p-6 mb-8">
+        <h4 className="text-lg font-semibold text-blue-900 mb-4">
+          Próximos pasos
+        </h4>
+        <ul className="text-left space-y-3">
+          <li className="flex items-start">
+            <svg
+              className="w-5 h-5 text-blue-500 mr-2 mt-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
-            Plan de alimentación personalizado
+            <span className="text-gray-700">
+              Revisaremos tu información y crearemos un plan personalizado
+            </span>
           </li>
-          <li className="flex items-center">
-            <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <li className="flex items-start">
+            <svg
+              className="w-5 h-5 text-blue-500 mr-2 mt-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
-            Rutina de ejercicios adaptada a tus necesidades
+            <span className="text-gray-700">
+              Recibirás un correo electrónico con tu plan en las próximas 24 horas
+            </span>
           </li>
-          <li className="flex items-center">
-            <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <li className="flex items-start">
+            <svg
+              className="w-5 h-5 text-blue-500 mr-2 mt-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
-            Recomendaciones de hábitos saludables
+            <span className="text-gray-700">
+              Podrás acceder a tu plan y seguimiento en tu perfil
+            </span>
           </li>
         </ul>
       </div>
 
-      <div className="mt-8">
-        <button
-          onClick={handleReturnToProfile}
-          className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-        >
-          Volver al Perfil
-        </button>
-      </div>
+      <ContinueButton
+        message="¡Completar encuesta!"
+        onContinue={finishSurvey}
+      />
     </div>
   );
 };

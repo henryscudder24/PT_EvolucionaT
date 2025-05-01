@@ -82,20 +82,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ErrorResponse>;
-        if (axiosError.response) {
-          // El servidor respondió con un código de error
-          const errorMessage = axiosError.response.data?.detail || 'Error en el servidor';
-          throw new Error(errorMessage);
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        } else if (axiosError.response) {
+          throw new Error('Error en el servidor');
         } else if (axiosError.request) {
-          // La petición fue hecha pero no se recibió respuesta
           throw new Error('No se pudo conectar con el servidor');
-        } else {
-          // Algo ocurrió al configurar la petición
-          throw new Error('Error al procesar la petición');
         }
       }
-      
-      throw new Error('Ocurrió un error inesperado');
+      throw error;
     }
   };
 

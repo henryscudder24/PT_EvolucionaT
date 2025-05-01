@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSurvey } from '../../context/SurveyContext';
 import { DailyHabitsData } from '../../validationSchemas';
+import ContinueButton from '../ContinueButton';
 
 type HorasSuenoType = DailyHabitsData['horasSueno'];
 type CalidadSuenoType = DailyHabitsData['calidadSueno'];
@@ -12,9 +13,9 @@ type HorasPantallasType = DailyHabitsData['horasPantallas'];
 type TipoTrabajoType = DailyHabitsData['tipoTrabajo'];
 
 const DailyHabits: React.FC = () => {
-  const { surveyData, updateSurveyData } = useSurvey();
+  const { surveyData, updateSurveyData, nextStep } = useSurvey();
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     updateSurveyData({
       dailyHabits: {
@@ -34,7 +35,7 @@ const DailyHabits: React.FC = () => {
           id="horasSueno"
           name="horasSueno"
           value={surveyData.dailyHabits.horasSueno}
-          onChange={handleSelectChange}
+          onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="Menos de 6 horas">Menos de 6 horas</option>
@@ -52,7 +53,7 @@ const DailyHabits: React.FC = () => {
           id="calidadSueno"
           name="calidadSueno"
           value={surveyData.dailyHabits.calidadSueno}
-          onChange={handleSelectChange}
+          onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="Excelente">Excelente</option>
@@ -64,13 +65,13 @@ const DailyHabits: React.FC = () => {
 
       <div>
         <label htmlFor="nivelEstres" className="block text-sm font-medium text-gray-700">
-          ¿Cuál es tu nivel de estrés actual?
+          ¿Cómo calificarías tu nivel de estrés?
         </label>
         <select
           id="nivelEstres"
           name="nivelEstres"
           value={surveyData.dailyHabits.nivelEstres}
-          onChange={handleSelectChange}
+          onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="Bajo">Bajo</option>
@@ -82,13 +83,13 @@ const DailyHabits: React.FC = () => {
 
       <div>
         <label htmlFor="consumoAgua" className="block text-sm font-medium text-gray-700">
-          ¿Cuánta agua consumes al día?
+          ¿Cuánta agua bebes al día?
         </label>
         <select
           id="consumoAgua"
           name="consumoAgua"
           value={surveyData.dailyHabits.consumoAgua}
-          onChange={handleSelectChange}
+          onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="Menos de 1 litro">Menos de 1 litro</option>
@@ -100,13 +101,13 @@ const DailyHabits: React.FC = () => {
 
       <div>
         <label htmlFor="comidasPorDia" className="block text-sm font-medium text-gray-700">
-          ¿Cuántas comidas realizas al día?
+          ¿Cuántas comidas haces al día?
         </label>
         <select
           id="comidasPorDia"
           name="comidasPorDia"
           value={surveyData.dailyHabits.comidasPorDia}
-          onChange={handleSelectChange}
+          onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="2 o menos">2 o menos</option>
@@ -117,13 +118,13 @@ const DailyHabits: React.FC = () => {
 
       <div>
         <label htmlFor="habitosSnacks" className="block text-sm font-medium text-gray-700">
-          ¿Con qué frecuencia consumes snacks?
+          ¿Con qué frecuencia comes snacks?
         </label>
         <select
           id="habitosSnacks"
           name="habitosSnacks"
           value={surveyData.dailyHabits.habitosSnacks}
-          onChange={handleSelectChange}
+          onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="No como snacks">No como snacks</option>
@@ -140,7 +141,7 @@ const DailyHabits: React.FC = () => {
           id="horasPantallas"
           name="horasPantallas"
           value={surveyData.dailyHabits.horasPantallas}
-          onChange={handleSelectChange}
+          onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="Menos de 4 horas">Menos de 4 horas</option>
@@ -151,13 +152,13 @@ const DailyHabits: React.FC = () => {
 
       <div>
         <label htmlFor="tipoTrabajo" className="block text-sm font-medium text-gray-700">
-          ¿Cuál es tu tipo de trabajo?
+          ¿Cómo describirías tu tipo de trabajo?
         </label>
         <select
           id="tipoTrabajo"
           name="tipoTrabajo"
           value={surveyData.dailyHabits.tipoTrabajo}
-          onChange={handleSelectChange}
+          onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="Sedentario">Sedentario</option>
@@ -166,6 +167,11 @@ const DailyHabits: React.FC = () => {
           <option value="Trabajo físico intenso">Trabajo físico intenso</option>
         </select>
       </div>
+
+      <ContinueButton
+        message="¡Gracias por compartir tus hábitos diarios! Esta información nos ayudará a crear un plan que se adapte a tu estilo de vida."
+        onContinue={nextStep}
+      />
     </div>
   );
 };

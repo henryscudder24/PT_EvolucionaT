@@ -1,26 +1,23 @@
 import React from 'react';
 import { useSurvey } from '../../context/SurveyContext';
 import { MedicalHistoryData } from '../../validationSchemas';
+import ContinueButton from '../ContinueButton';
 
 type CondicionCronicaType = MedicalHistoryData['condicionesCronicas'][number];
-type MedicamentoType = string;
 
 const MedicalHistory: React.FC = () => {
-  const { surveyData, updateSurveyData } = useSurvey();
+  const { surveyData, updateSurveyData, nextStep } = useSurvey();
 
-  const handleMultiSelect = (
-    name: 'condicionesCronicas' | 'medicamentos',
-    value: CondicionCronicaType | MedicamentoType
-  ) => {
-    const currentValues = (surveyData.medicalHistory[name] || []) as Array<CondicionCronicaType | MedicamentoType>;
+  const handleMultiSelect = (value: CondicionCronicaType) => {
+    const currentValues = surveyData.medicalHistory.condicionesCronicas;
     const newValues = currentValues.includes(value)
-      ? currentValues.filter((v) => v !== value)
+      ? currentValues.filter(v => v !== value)
       : [...currentValues, value];
 
     updateSurveyData({
       medicalHistory: {
         ...surveyData.medicalHistory,
-        [name]: newValues
+        condicionesCronicas: newValues
       }
     });
   };
@@ -46,15 +43,15 @@ const MedicalHistory: React.FC = () => {
             'Diabetes',
             'Hipertensión',
             'Problemas cardíacos',
-            'Artritis',
             'Asma',
+            'Artritis',
             'Otro'
           ].map(condicion => (
             <label key={condicion} className="inline-flex items-center">
               <input
                 type="checkbox"
-                checked={(surveyData.medicalHistory.condicionesCronicas || []).includes(condicion as CondicionCronicaType)}
-                onChange={() => handleMultiSelect('condicionesCronicas', condicion as CondicionCronicaType)}
+                checked={surveyData.medicalHistory.condicionesCronicas.includes(condicion as CondicionCronicaType)}
+                onChange={() => handleMultiSelect(condicion as CondicionCronicaType)}
                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
               <span className="ml-2 text-sm text-gray-700">{condicion}</span>
@@ -63,17 +60,35 @@ const MedicalHistory: React.FC = () => {
         </div>
       </div>
 
+      {surveyData.medicalHistory.condicionesCronicas.includes('Otro' as CondicionCronicaType) && (
+        <div>
+          <label htmlFor="otrasCondiciones" className="block text-sm font-medium text-gray-700">
+            Por favor, especifica otras condiciones médicas
+          </label>
+          <textarea
+            id="otrasCondiciones"
+            name="otrasCondiciones"
+            value={surveyData.medicalHistory.otrasCondiciones || ''}
+            onChange={handleTextChange}
+            rows={3}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            placeholder="Describe tus otras condiciones médicas..."
+          />
+        </div>
+      )}
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="medicamentos" className="block text-sm font-medium text-gray-700">
           ¿Tomas algún medicamento regularmente?
         </label>
         <textarea
+          id="medicamentos"
           name="medicamentos"
           value={surveyData.medicalHistory.medicamentos || ''}
           onChange={handleTextChange}
           rows={3}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          placeholder="Lista los medicamentos que tomas regularmente..."
+          placeholder="Lista los medicamentos que tomas..."
         />
       </div>
 
@@ -88,13 +103,13 @@ const MedicalHistory: React.FC = () => {
           onChange={handleTextChange}
           rows={3}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          placeholder="Describe cualquier lesión o problema físico reciente..."
+          placeholder="Describe cualquier lesión reciente..."
         />
       </div>
 
       <div>
         <label htmlFor="antecedentesFamiliares" className="block text-sm font-medium text-gray-700">
-          Historial médico familiar
+          ¿Hay antecedentes médicos importantes en tu familia?
         </label>
         <textarea
           id="antecedentesFamiliares"
@@ -103,9 +118,14 @@ const MedicalHistory: React.FC = () => {
           onChange={handleTextChange}
           rows={3}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          placeholder="Describe cualquier condición médica relevante en tu familia..."
+          placeholder="Describe los antecedentes médicos familiares relevantes..."
         />
       </div>
+
+      <ContinueButton
+        message="¡Gracias por compartir tu historial médico! Esta información nos ayudará a crear un plan seguro y efectivo."
+        onContinue={nextStep}
+      />
     </div>
   );
 };

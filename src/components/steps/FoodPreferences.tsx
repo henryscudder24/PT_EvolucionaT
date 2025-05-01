@@ -1,13 +1,14 @@
 import React from 'react';
 import { useSurvey } from '../../context/SurveyContext';
 import { FoodPreferencesData } from '../../validationSchemas';
+import ContinueButton from '../ContinueButton';
 
 type DietaType = FoodPreferencesData['tipoDieta'][number];
 type AlergiaType = FoodPreferencesData['alergias'][number];
 type AlimentoFavoritoType = FoodPreferencesData['alimentosFavoritos'][number];
 
 const FoodPreferences: React.FC = () => {
-  const { surveyData, updateSurveyData } = useSurvey();
+  const { surveyData, updateSurveyData, nextStep } = useSurvey();
 
   const handleMultiSelect = (
     name: keyof Pick<FoodPreferencesData, 'tipoDieta' | 'alergias' | 'alimentosFavoritos'>,
@@ -147,6 +148,11 @@ const FoodPreferences: React.FC = () => {
           rows={3}
         />
       </div>
+
+      <ContinueButton
+        message="¡Excelente! Conocer tus preferencias nos permitirá crear un plan que realmente disfrutes."
+        onContinue={nextStep}
+      />
     </div>
   );
 };

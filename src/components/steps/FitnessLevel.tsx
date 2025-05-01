@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSurvey } from '../../context/SurveyContext';
 import { FitnessLevelData } from '../../validationSchemas';
+import ContinueButton from '../ContinueButton';
 
 type FrecuenciaEjercicioType = FitnessLevelData['frecuenciaEjercicio'];
 type TipoEjercicioType = FitnessLevelData['tiposEjercicio'][number];
@@ -8,7 +9,7 @@ type EquipamientoType = FitnessLevelData['equipamiento'][number];
 type TiempoEjercicioType = FitnessLevelData['tiempoEjercicio'];
 
 const FitnessLevel: React.FC = () => {
-  const { surveyData, updateSurveyData } = useSurvey();
+  const { surveyData, updateSurveyData, nextStep } = useSurvey();
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -125,6 +126,11 @@ const FitnessLevel: React.FC = () => {
           <option value="Más de 60 minutos">Más de 60 minutos</option>
         </select>
       </div>
+
+      <ContinueButton
+        message="¡Excelente! Conocer tu nivel de condición física nos ayuda a crear un plan adaptado a tus necesidades."
+        onContinue={nextStep}
+      />
     </div>
   );
 };

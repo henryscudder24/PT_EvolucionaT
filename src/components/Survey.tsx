@@ -1,8 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSurvey } from '../context/SurveyContext';
-import SurveyProgress from './SurveyProgress';
-import SurveyNavigation from './SurveyNavigation';
 import PersonalInfo from './steps/PersonalInfo';
 import FoodPreferences from './steps/FoodPreferences';
 import GoalsObjectives from './steps/GoalsObjectives';
@@ -10,38 +7,10 @@ import FitnessLevel from './steps/FitnessLevel';
 import MedicalHistory from './steps/MedicalHistory';
 import DailyHabits from './steps/DailyHabits';
 import Completion from './steps/Completion';
-import { toast } from 'react-hot-toast';
+import SurveyProgress from './SurveyProgress';
 
 const Survey: React.FC = () => {
-  const { currentStep, totalSteps, nextStep, prevStep, isLastStep, finishSurvey, isStepComplete } = useSurvey();
-  const navigate = useNavigate();
-
-  const handleNext = () => {
-    if (isStepComplete(currentStep)) {
-      if (isLastStep) {
-        try {
-          finishSurvey();
-          toast.success('¡Encuesta completada con éxito! Gracias por tu participación.');
-          setTimeout(() => {
-            navigate('/profile');
-          }, 1000);
-        } catch (error) {
-          console.error('Error al finalizar la encuesta:', error);
-          toast.error('Hubo un error al completar la encuesta. Por favor, intenta nuevamente.');
-        }
-      } else {
-        nextStep();
-      }
-    } else {
-      toast.error('Por favor, completa todos los campos requeridos antes de continuar.');
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 1) {
-      prevStep();
-    }
-  };
+  const { currentStep } = useSurvey();
 
   const renderCurrentStep = () => {
     switch (currentStep) {
@@ -60,7 +29,7 @@ const Survey: React.FC = () => {
       case 7:
         return <Completion />;
       default:
-        return <PersonalInfo />;
+        return null;
     }
   };
 
@@ -79,43 +48,19 @@ const Survey: React.FC = () => {
       case 6:
         return 'Hábitos Diarios';
       case 7:
-        return '¡Completado!';
+        return '¡Encuesta Completada!';
       default:
-        return 'Encuesta de Salud';
+        return '';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8">{getStepTitle()}</h1>
-        <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
-          <SurveyProgress />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <SurveyProgress className="mb-8" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">{getStepTitle()}</h2>
           {renderCurrentStep()}
-          <div className="flex justify-between mt-6">
-            <button
-              onClick={handleBack}
-              disabled={currentStep === 1}
-              className={`px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium ${
-                currentStep === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Anterior
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={!isStepComplete(currentStep)}
-              className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                !isStepComplete(currentStep)
-                  ? 'bg-blue-300 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700'
-              }`}
-            >
-              {isLastStep ? 'Finalizar' : 'Siguiente'}
-            </button>
-          </div>
         </div>
       </div>
     </div>

@@ -34,15 +34,22 @@ const Login = () => {
       setIsLoading(true);
       await login(data.email, data.password);
       console.log('Login successful');
-      toast.success('¡Inicio de sesión exitoso!');
       navigate('/profile');
     } catch (error) {
       console.error('Error en el login:', error);
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error('Ocurrió un error inesperado. Por favor intenta nuevamente.');
-      }
+      const errorMessage = error instanceof Error ? error.message : 'Error al iniciar sesión';
+      toast.error(`❌ Intento fallido: ${errorMessage}`, {
+        duration: 4000,
+        style: {
+          background: '#FEE2E2',
+          color: '#991B1B',
+          border: '1px solid #FCA5A5',
+          padding: '16px',
+          borderRadius: '8px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
     } finally {
       setIsLoading(false);
     }

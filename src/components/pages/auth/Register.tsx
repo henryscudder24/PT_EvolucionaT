@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,13 +36,14 @@ const registerSchema = z.object({
 type FormData = z.infer<typeof registerSchema>
 
 const Register = () => {
+  const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(registerSchema),
   }); 
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await fetch("http://localhost:8000/usuarios/registro", {
+      const response = await fetch("http://localhost:8000/api/usuarios/registro", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,6 +63,10 @@ const Register = () => {
       }
   
       alert('✅ Registro exitoso');
+      // Redirigir a la página de login después de 1 segundo
+      setTimeout(() => {
+        navigate('/login');
+      }, 1000);
       
     } catch (err) {
       console.error('Error inesperado:', err);

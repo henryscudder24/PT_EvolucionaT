@@ -21,6 +21,7 @@ async def complete_survey(
 ):
     try:
         logger.info(f"Recibiendo datos de encuesta para usuario {current_user.id}")
+        logger.info(f"Datos recibidos: {survey_data.model_dump_json()}")
         
         # Validar que el usuario existe y está activo
         if not current_user.estado:
@@ -61,6 +62,7 @@ async def complete_survey(
             perfil.tiempo_meta = survey_data.goalsObjectives.tiempoMeta
             perfil.nivel_compromiso = survey_data.goalsObjectives.nivelCompromiso
             db.flush()
+            logger.info("Perfil de usuario actualizado exitosamente")
 
         # 2. Limpiar datos anteriores
         logger.info("Limpiando datos anteriores")
@@ -86,18 +88,21 @@ async def complete_survey(
             models.HabitosDiarios.id_perfil == perfil.id
         ).delete()
         db.flush()
+        logger.info("Datos anteriores limpiados exitosamente")
 
         # 3. Guardar preferencias alimentarias
         logger.info("Guardando preferencias alimentarias")
+        logger.info(f"Tipos de dieta: {survey_data.foodPreferences.tipoDieta}")
         
         # Validar y guardar tipo de dieta
-        if survey_data.foodPreferences.tipoDieta:
+        for tipo in survey_data.foodPreferences.tipoDieta:
             preferencia = models.PreferenciasAlimentarias(
                 id_perfil=perfil.id,
                 tipo='dieta',
-                valor=survey_data.foodPreferences.tipoDieta
+                valor=tipo
             )
             db.add(preferencia)
+            logger.info(f"Agregada preferencia de dieta: {tipo}")
 
         # Validar y guardar alergias
         for alergia in survey_data.foodPreferences.alergias:
@@ -112,6 +117,7 @@ async def complete_survey(
                 valor=alergia
             )
             db.add(preferencia)
+            logger.info(f"Agregada alergia: {alergia}")
 
         # Validar y guardar alimentos favoritos
         for favorito in survey_data.foodPreferences.alimentosFavoritos:
@@ -126,6 +132,7 @@ async def complete_survey(
                 valor=favorito
             )
             db.add(preferencia)
+            logger.info(f"Agregado alimento favorito: {favorito}")
 
         # 4. Guardar alimentos evitados
         if survey_data.foodPreferences.alimentosEvitar:
@@ -134,6 +141,7 @@ async def complete_survey(
                 descripcion=survey_data.foodPreferences.alimentosEvitar
             )
             db.add(alimentos_evitados)
+            logger.info(f"Agregados alimentos evitados: {survey_data.foodPreferences.alimentosEvitar}")
 
         # 5. Guardar condición física
         logger.info("Guardando condición física")
@@ -143,6 +151,7 @@ async def complete_survey(
             tiempo_disponible=survey_data.fitnessLevel.tiempoEjercicio
         )
         db.add(condicion)
+        logger.info("Condición física guardada exitosamente")
 
         # 6. Guardar ejercicios preferidos
         for ejercicio in survey_data.fitnessLevel.tiposEjercicio:
@@ -156,6 +165,7 @@ async def complete_survey(
                 tipo=ejercicio
             )
             db.add(ejercicio_pref)
+            logger.info(f"Agregado ejercicio preferido: {ejercicio}")
 
         # 7. Guardar equipamiento disponible
         for equipo in survey_data.fitnessLevel.equipamiento:
@@ -169,6 +179,7 @@ async def complete_survey(
                 equipo=equipo
             )
             db.add(equipamiento)
+            logger.info(f"Agregado equipamiento: {equipo}")
 
         # 8. Guardar historial médico
         logger.info("Guardando historial médico")
@@ -180,6 +191,7 @@ async def complete_survey(
             antecedentes_familiares=survey_data.medicalHistory.antecedentesFamiliares
         )
         db.add(historial)
+        logger.info("Historial médico guardado exitosamente")
 
         # 9. Guardar hábitos diarios
         logger.info("Guardando hábitos diarios")
@@ -195,6 +207,7 @@ async def complete_survey(
             tipo_trabajo=survey_data.dailyHabits.tipoTrabajo
         )
         db.add(habitos)
+        logger.info("Hábitos diarios guardados exitosamente")
 
         # Guardar todos los cambios
         logger.info("Guardando todos los cambios en la base de datos")

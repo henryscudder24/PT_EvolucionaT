@@ -1,83 +1,170 @@
-# EvolucionaT - Recomendaciones de Fitness y Dieta impulsadas por IA
+# EvolucionaT - Plataforma de Bienestar y Nutrición
 
-## Visión General
+EvolucionaT es una plataforma integral de bienestar y nutrición que ayuda a los usuarios a alcanzar sus objetivos de salud a través de un enfoque personalizado y basado en datos.
 
-EvolucionaT es una innovadora aplicación web que utiliza inteligencia artificial para ofrecer recomendaciones personalizadas de ejercicio y alimentación. A través de un sistema de encuestas completas, los usuarios pueden ingresar su información personal, hábitos diarios, objetivos de fitness y preferencias alimentarias para recibir sugerencias adaptadas y medibles para su camino hacia el bienestar.
+## 🚀 Características Principales
 
-## Funcionalidades Clave
+### Sistema de Autenticación
+- Registro de usuarios con validación de datos
+- Inicio de sesión seguro
+- Protección de rutas privadas
+- Gestión de sesiones de usuario
 
-- **Encuesta Inteligente por Pasos**: Cuestionario intuitivo que recopila información esencial del usuario:
-  - Perfil personal y métricas de salud
-  - Hábitos diarios y estilo de vida
-  - Metas y preferencias de entrenamiento
-  - Restricciones y preferencias alimentarias
+### Encuesta de Bienestar
+Sistema de encuesta interactiva de 7 pasos que recopila información detallada sobre:
+1. **Información Personal**
+   - Datos básicos del usuario
+   - Información de contacto
+   - Preferencias de comunicación
 
-- **Recomendaciones impulsadas por IA**: Algoritmos avanzados analizan las respuestas para generar:
-  - Planes de entrenamiento personalizados
-  - Recomendaciones de dieta a medida
-  - Métricas de seguimiento de progreso
-  - Sugerencias adaptativas basadas en el avance del usuario
+2. **Preferencias Alimentarias**
+   - Restricciones dietéticas
+   - Alergias e intolerancias
+   - Preferencias de comida
+   - Hábitos alimenticios
 
-- **Interfaz Moderna**: Desarrollada con React y Tailwind CSS para ofrecer una experiencia de usuario fluida, visual y adaptable
+3. **Objetivos y Metas**
+   - Objetivos de salud
+   - Metas de peso
+   - Expectativas de tiempo
+   - Prioridades de bienestar
 
-## Tecnologías Utilizadas
+4. **Nivel de Actividad Física**
+   - Frecuencia de ejercicio
+   - Tipos de actividades
+   - Nivel de condición física
+   - Preferencias de entrenamiento
 
-- **Framework de Frontend**: React 18.3 con TypeScript  
-- **Herramienta de Build**: Vite 6.0  
-- **Ruteo**: React Router 7.5  
-- **Estilos**: Tailwind CSS 3.4 con animaciones  
-- **Manejo de Formularios**: React Hook Form 7.55 con validación mediante Zod  
-- **Componentes de UI**: React Icons 5.5  
-- **Herramientas de Desarrollo**:
-  - TypeScript 5.6  
-  - ESLint y Prettier para calidad de código  
-  - Biome para formato de código consistente
+5. **Historial Médico**
+   - Condiciones médicas
+   - Medicamentos
+   - Lesiones previas
+   - Historial familiar
 
-## Cómo Empezar
+6. **Hábitos Diarios**
+   - Patrones de sueño
+   - Niveles de estrés
+   - Consumo de agua
+   - Hábitos de tabaco y alcohol
 
-### Requisitos Previos
+7. **Finalización**
+   - Resumen de la encuesta
+   - Confirmación de datos
+   - Próximos pasos
 
-- Node.js (se recomienda la versión LTS)
-- npm o yarn como gestor de paquetes
+### Interfaz de Usuario
+- Diseño moderno y responsivo
+- Navegación intuitiva
+- Barra de progreso visual
+- Mensajes de retroalimentación
+- Notificaciones toast para acciones importantes
 
-### Instalación
+### Características Técnicas
+- Frontend en React con TypeScript
+- Backend en Python con FastAPI
+- Base de datos PostgreSQL
+- Autenticación JWT
+- API RESTful
+- Manejo de estado con Context API
+- Validación de formularios
+- Diseño responsivo con Tailwind CSS
 
-1. Clona el repositorio:
-```bash
-git clone [repository-url]
-cd EvolucionaT_v1
+## 🛠️ Tecnologías Utilizadas
+
+### Frontend
+- React 18
+- TypeScript
+- React Router v6
+- Tailwind CSS
+- React Hot Toast
+- Framer Motion
+- React Hook Form
+- Zod (validación)
+
+### Backend
+- Python 3.11
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- JWT
+- Pydantic
+- Alembic (migraciones)
+
+## 📦 Estructura del Proyecto
+
+```
+evolucionat/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── pages/
+│   │   │   │   ├── steps/
+│   │   │   │   └── ui/
+│   │   │   ├── context/
+│   │   │   ├── services/
+│   │   │   └── utils/
+│   │   │   └── components/
+│   │   └── public/
+│   └── backend/
+│       ├── app/
+│       │   ├── api/
+│       │   │   └── routes/
+│       │   │   └── core/
+│       │   │   └── models/
+│       │   │   └── services/
+│       │   └── tests/
+│       └── venv/
+└── README.md
 ```
 
-2. Instala las dependencias:
+## 🚀 Instalación
+
+1. Clonar el repositorio:
 ```bash
+git clone https://github.com/tu-usuario/evolucionat.git
+cd evolucionat
+```
+
+2. Configurar el frontend:
+```bash
+cd frontend
 npm install
-# o
-yarn install
-```
-
-3. Inicia el servidor de desarrollo:
-```bash
 npm run dev
-# o
-yarn dev
 ```
 
-4. Abre tu navegador y ve a `http://localhost:5173`
-
-### Compilar para Producción
-
+3. Configurar el backend:
 ```bash
-npm run build
-# o
-yarn build
+cd backend
+python -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
-<<<<<<< HEAD
-=======
+## 🔧 Variables de Entorno
 
+### Frontend (.env)
+```
+VITE_API_URL=http://localhost:8000
+```
 
->>>>>>> 665210c (Primeras fases del Proyecto -MVPl)
-## Licencia
+### Backend (.env)
+```
+DATABASE_URL=postgresql://user:password@localhost:5432/evolucionat
+SECRET_KEY=your-secret-key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
 
-Este proyecto es **propietario y confidencial**. Todos los derechos reservados.
+## 📝 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+## 🤝 Contribución
+
+Las contribuciones son bienvenidas. Por favor, lee `CONTRIBUTING.md` para detalles sobre nuestro código de conducta y el proceso para enviarnos pull requests.
+
+## 📞 Contacto
+
+Para soporte o consultas, por favor contacta a [tu-email@ejemplo.com]
 

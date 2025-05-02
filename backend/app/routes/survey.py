@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Security
 from sqlalchemy.orm import Session
 from typing import List
 import logging
@@ -8,16 +8,19 @@ from ..models.base import User
 from ..schemas import survey as schemas
 from app.auth import get_current_user
 from sqlalchemy.sql import func
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+security = HTTPBearer()
 
 @router.post("/survey/complete", response_model=dict)
 async def complete_survey(
     survey_data: schemas.SurveyDataResponse,
+    credentials: HTTPAuthorizationCredentials = Security(security),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

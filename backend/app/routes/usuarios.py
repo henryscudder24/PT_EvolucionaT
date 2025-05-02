@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Security
 from sqlalchemy.orm import Session
 from app.schemas import UsuarioCreate, UsuarioOut, UsuarioLogin
 from app.database import get_db
@@ -14,12 +14,14 @@ from ..models.base import User
 from app.schemas.usuario import UsuarioCreate, UsuarioOut
 from app.crud import usuario as crud_usuario
 from typing import List
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+security = HTTPBearer()
 
 @router.options("/{path:path}")
 async def options_handler(request: Request):
@@ -234,6 +236,7 @@ async def get_health_metrics(current_user: User = Depends(get_current_user), db:
 @router.post("/calculate-metrics")
 async def calculate_metrics(
     data: dict,
+    credentials: HTTPAuthorizationCredentials = Security(security),
     current_user: User = Depends(get_current_user)
 ):
     try:

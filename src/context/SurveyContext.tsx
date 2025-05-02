@@ -246,9 +246,56 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return;
       }
 
+      // Transformar los datos al formato esperado por el backend
+      const transformedData = {
+        personalInfo: {
+          genero: surveyData.personalInfo.genero.toLowerCase(),
+          edad: surveyData.personalInfo.edad,
+          altura: surveyData.personalInfo.altura,
+          peso: surveyData.personalInfo.peso,
+          nivelActividad: surveyData.personalInfo.nivelActividad.toLowerCase()
+        },
+        goalsObjectives: {
+          objetivoPrincipal: surveyData.goalsObjectives.objetivoPrincipal[0], // Tomar el primer objetivo
+          tiempoMeta: surveyData.goalsObjectives.tiempoMeta,
+          nivelCompromiso: surveyData.goalsObjectives.nivelCompromiso,
+          medicionProgreso: surveyData.goalsObjectives.medicionProgreso[0] // Tomar la primera medición
+        },
+        foodPreferences: {
+          tipoDieta: surveyData.foodPreferences.tipoDieta,
+          alergias: surveyData.foodPreferences.alergias,
+          otrosAlergias: surveyData.foodPreferences.otrosAlergias,
+          alimentosFavoritos: surveyData.foodPreferences.alimentosFavoritos,
+          alimentosEvitados: surveyData.foodPreferences.alimentosEvitar ? [surveyData.foodPreferences.alimentosEvitar] : []
+        },
+        physicalCondition: {
+          frecuenciaEjercicio: surveyData.fitnessLevel.frecuenciaEjercicio,
+          tiempoDisponible: surveyData.fitnessLevel.tiempoEjercicio,
+          ejerciciosPreferidos: surveyData.fitnessLevel.tiposEjercicio,
+          equipamientoDisponible: surveyData.fitnessLevel.equipamiento
+        },
+        medicalHistory: {
+          condicionCronica: surveyData.medicalHistory.condicionesCronicas.join(', '),
+          otrasCondiciones: surveyData.medicalHistory.otrasCondiciones,
+          medicamentos: surveyData.medicalHistory.medicamentos,
+          lesiones: surveyData.medicalHistory.lesionesRecientes,
+          antecedentesFamiliares: surveyData.medicalHistory.antecedentesFamiliares
+        },
+        dailyHabits: {
+          horasSueno: surveyData.dailyHabits.horasSueno,
+          calidadSueno: surveyData.dailyHabits.calidadSueno,
+          nivelEstres: surveyData.dailyHabits.nivelEstres,
+          aguaDia: surveyData.dailyHabits.consumoAgua,
+          comidasDia: surveyData.dailyHabits.comidasPorDia,
+          habitosSnack: surveyData.dailyHabits.habitosSnacks,
+          horasPantalla: surveyData.dailyHabits.horasPantallas,
+          tipoTrabajo: surveyData.dailyHabits.tipoTrabajo
+        }
+      };
+
       const response = await axios.post(
         'http://localhost:8000/api/survey/complete',
-        surveyData,
+        transformedData,
         {
           headers: {
             Authorization: `Bearer ${token}`

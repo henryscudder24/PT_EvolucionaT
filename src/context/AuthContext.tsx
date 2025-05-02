@@ -28,6 +28,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!token);
 
+  // Configurar el interceptor de axios para incluir el token en todas las peticiones
+  useEffect(() => {
+    const interceptor = axios.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.request.eject(interceptor);
+    };
+  }, []);
+
   useEffect(() => {
     if (token) {
       fetchUserData();
@@ -36,11 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserData = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/usuarios/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(`${API_URL}/api/usuarios/me`);
       setUser(response.data);
       setIsAuthenticated(true);
     } catch (error) {
@@ -57,12 +73,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         {
           correo: email,
           contraseña: password,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
         }
       );
 
@@ -73,10 +83,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Respuesta del servidor inválida');
       }
 
+      localStorage.setItem('token', accessToken);
       setToken(accessToken);
       setUser(userData);
       setIsAuthenticated(true);
-      localStorage.setItem('token', accessToken);
     } catch (error) {
       console.error('Login error:', error);
       
@@ -95,10 +105,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setUser(null);
     setToken(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('token');
   };
 
   return (

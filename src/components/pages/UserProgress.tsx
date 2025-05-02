@@ -18,6 +18,7 @@ interface SurveyData {
 }
 
 interface ProgressData {
+  id: number;
   fecha: Date;
   valor: number | string;
   categoria?: string;
@@ -87,10 +88,11 @@ const UserProgress: React.FC = () => {
   const generateEmptyProgressData = () => {
     const data: ProgressData[] = [];
     const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + 3);
+    endDate.setMonth(endDate.getMonth() + 1);
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       data.push({
+        id: 0,
         fecha: new Date(d),
         valor: '',
       });
@@ -187,52 +189,6 @@ const UserProgress: React.FC = () => {
     const tiempoEfectivo = tiempoTotal - latencia - (despertares * 15); // 15 minutos por despertar
     return (tiempoEfectivo / tiempoTotal) * 100;
   };
-
-  const fetchProgressData = async () => {
-    if (!user || !selectedMetric) return;
-    
-    try {
-      const response = await axios.get(`http://localhost:8000/api/seguimiento-metrica`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: {
-          tipo_metrica: selectedMetric,
-          fecha_inicio: startDate.toISOString().split('T')[0],
-          fecha_fin: new Date(startDate.getTime() + (90 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]
-        }
-      });
-
-      const data = response.data.map((item: any) => ({
-        fecha: new Date(item.fecha),
-        valor: item.valor_principal,
-        categoria: item.categoria,
-        detalles: item.detalles
-      }));
-
-      setProgressData(prev => {
-        const updated = [...prev];
-        data.forEach((item: any) => {
-          const index = updated.findIndex(d => 
-            d.fecha.toDateString() === item.fecha.toDateString()
-          );
-          if (index !== -1) {
-            updated[index] = item;
-          }
-        });
-        return updated;
-      });
-    } catch (error) {
-      console.error('Error al cargar datos de seguimiento:', error);
-      toast.error('Error al cargar el historial de seguimiento');
-    }
-  };
-
-  useEffect(() => {
-    if (user && selectedMetric) {
-      fetchProgressData();
-    }
-  }, [user, selectedMetric, startDate]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -334,21 +290,7 @@ const UserProgress: React.FC = () => {
         }
       });
 
-      setProgressData(prev => {
-        const updated = [...prev];
-        const index = updated.findIndex(d => 
-          d.fecha.toDateString() === new Date().toDateString()
-        );
-        if (index !== -1) {
-          updated[index] = {
-            fecha: new Date(),
-            valor,
-            categoria,
-            detalles
-          };
-        }
-        return updated;
-      });
+      await fetchProgressData();
 
       toast.success('Datos registrados correctamente');
       setMetricInput({});
@@ -357,6 +299,65 @@ const UserProgress: React.FC = () => {
       toast.error('Error al guardar los datos');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchProgressData = async () => {
+    if (!user || !selectedMetric) return;
+    
+    try {
+      const response = await axios.get(`http://localhost:8000/api/seguimiento-metrica`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          tipo_metrica: selectedMetric,
+          fecha_inicio: startDate.toISOString().split('T')[0],
+          fecha_fin: new Date(startDate.getTime() + (30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]
+        }
+      });
+
+      const data = response.data.map((item: any) => ({
+        id: item.id,
+        fecha: new Date(item.fecha),
+        valor: item.valor_principal,
+        categoria: item.categoria,
+        detalles: item.detalles
+      }));
+
+      data.sort((a: ProgressData, b: ProgressData) => b.fecha.getTime() - a.fecha.getTime());
+
+      setProgressData(data);
+    } catch (error) {
+      console.error('Error al cargar datos de seguimiento:', error);
+      toast.error('Error al cargar el historial de seguimiento');
+    }
+  };
+
+  useEffect(() => {
+    if (user && selectedMetric) {
+      fetchProgressData();
+    }
+  }, [user, selectedMetric, startDate]);
+
+  const handleDelete = async (id: number, fecha: Date) => {
+    try {
+      await axios.post(`http://localhost:8000/api/seguimiento-metrica/delete`, {
+        id: id,
+        tipo_metrica: selectedMetric,
+        fecha: fecha.toISOString().split('T')[0]
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+
+      // Actualizar la tabla después de eliminar
+      await fetchProgressData();
+      toast.success('Registro eliminado correctamente');
+    } catch (error) {
+      console.error('Error al eliminar el registro:', error);
+      toast.error('Error al eliminar el registro');
     }
   };
 
@@ -496,6 +497,160 @@ const UserProgress: React.FC = () => {
                 <p><strong>Para medir la latencia:</strong> Tiempo que tardas en quedarte dormido después de acostarte.</p>
                 <p><strong>Para medir despertares:</strong> Cuenta las veces que te despiertas durante la noche.</p>
                 <p className="mt-3"><strong>Eficiencia del sueño:</strong> Porcentaje de tiempo que realmente duermes del tiempo total en cama.</p>
+              </div>
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    };
+
+    const renderOptimalValues = () => {
+      switch (selectedMetric) {
+        case 'Peso corporal':
+          return (
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-3">Valores de Referencia</h3>
+              <div className="space-y-3 text-green-700">
+                <p><strong>Peso Saludable:</strong> Se considera un peso saludable cuando el IMC está entre 18.5 y 24.9.</p>
+                <p><strong>Pérdida de Peso Segura:</strong> 0.5-1 kg por semana es una pérdida de peso saludable y sostenible.</p>
+                <p><strong>Ganancia de Peso:</strong> Para ganancia muscular, 0.25-0.5 kg por semana es óptimo.</p>
+                <p className="mt-3 text-sm italic">Recuerda: El peso ideal varía según tu composición corporal, altura y objetivos específicos.</p>
+              </div>
+            </div>
+          );
+
+        case 'Tasa metabólica basal (TMB)':
+          return (
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-3">Valores de Referencia</h3>
+              <div className="space-y-3 text-green-700">
+                <p><strong>Hombres:</strong> 1600-2000 kcal/día (promedio)</p>
+                <p><strong>Mujeres:</strong> 1400-1800 kcal/día (promedio)</p>
+                <p><strong>Factores que Aumentan la TMB:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Mayor masa muscular</li>
+                  <li>Actividad física regular</li>
+                  <li>Dieta rica en proteínas</li>
+                </ul>
+                <p className="mt-3 text-sm italic">Nota: Estos valores son aproximados y pueden variar según tu composición corporal y nivel de actividad.</p>
+              </div>
+            </div>
+          );
+
+        case 'IMC (Índice de Masa Corporal)':
+          return (
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-3">Valores de Referencia</h3>
+              <div className="space-y-3 text-green-700">
+                <p><strong>Rangos de IMC:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Bajo peso: {'<'} 18.5</li>
+                  <li>Normal: 18.5 - 24.9</li>
+                  <li>Sobrepeso: 25 - 29.9</li>
+                  <li>Obesidad I: 30 - 34.9</li>
+                  <li>Obesidad II: 35 - 39.9</li>
+                  <li>Obesidad III: {'≥'} 40</li>
+                </ul>
+                <p className="mt-3"><strong>IMC Óptimo:</strong> 18.5 - 24.9</p>
+                <p className="text-sm italic">Nota: El IMC es una herramienta de screening y no considera la composición corporal.</p>
+              </div>
+            </div>
+          );
+
+        case 'Relación cintura-cadera (WHR)':
+          return (
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-3">Valores de Referencia</h3>
+              <div className="space-y-3 text-green-700">
+                <p><strong>Hombres:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Bajo riesgo: {'<'} 0.9</li>
+                  <li>Riesgo moderado: 0.9 - 1.0</li>
+                  <li>Alto riesgo: {'>'} 1.0</li>
+                </ul>
+                <p><strong>Mujeres:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Bajo riesgo: {'<'} 0.8</li>
+                  <li>Riesgo moderado: 0.8 - 0.85</li>
+                  <li>Alto riesgo: {'>'} 0.85</li>
+                </ul>
+                <p className="mt-3 text-sm italic">Un WHR más bajo indica una distribución de grasa más saludable.</p>
+              </div>
+            </div>
+          );
+
+        case '1RM y cargas máximas':
+          return (
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-3">Valores de Referencia</h3>
+              <div className="space-y-3 text-green-700">
+                <p><strong>Progresión Recomendada:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Principiante: 5-10% de incremento por mes</li>
+                  <li>Intermedio: 2-5% de incremento por mes</li>
+                  <li>Avanzado: 1-2% de incremento por mes</li>
+                </ul>
+                <p><strong>Frecuencia de Prueba:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Principiante: Cada 2-3 meses</li>
+                  <li>Intermedio: Cada 3-4 meses</li>
+                  <li>Avanzado: Cada 4-6 meses</li>
+                </ul>
+                <p className="mt-3 text-sm italic">La progresión debe ser gradual y segura para evitar lesiones.</p>
+              </div>
+            </div>
+          );
+
+        case 'Frecuencia cardíaca en reposo':
+          return (
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-3">Valores de Referencia</h3>
+              <div className="space-y-3 text-green-700">
+                <p><strong>Rangos Normales:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Atletas: 40-60 lpm</li>
+                  <li>Adultos activos: 60-80 lpm</li>
+                  <li>Adultos promedio: 60-100 lpm</li>
+                </ul>
+                <p><strong>Indicadores de Mejora:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Disminución gradual con el entrenamiento</li>
+                  <li>Mayor variabilidad entre latidos</li>
+                  <li>Recuperación más rápida post-ejercicio</li>
+                </ul>
+                <p className="mt-3 text-sm italic">Una frecuencia cardíaca en reposo más baja generalmente indica mejor condición cardiovascular.</p>
+              </div>
+            </div>
+          );
+
+        case 'Calidad del sueño':
+          return (
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-3">Valores de Referencia</h3>
+              <div className="space-y-3 text-green-700">
+                <p><strong>Duración Óptima:</strong> 7-9 horas por noche</p>
+                <p><strong>Eficiencia del Sueño:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Excelente: {'>'} 90%</li>
+                  <li>Buena: 85-90%</li>
+                  <li>Aceptable: 80-85%</li>
+                  <li>Necesita mejorar: {'<'} 80%</li>
+                </ul>
+                <p><strong>Latencia del Sueño:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Óptima: {'<'} 15 minutos</li>
+                  <li>Aceptable: 15-30 minutos</li>
+                  <li>Necesita mejorar: {'>'} 30 minutos</li>
+                </ul>
+                <p><strong>Despertares:</strong></p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Óptimo: 0-1 por noche</li>
+                  <li>Aceptable: 2-3 por noche</li>
+                  <li>Necesita mejorar: {'>'} 3 por noche</li>
+                </ul>
+                <p className="mt-3 text-sm italic">La calidad del sueño es crucial para la recuperación y el rendimiento.</p>
               </div>
             </div>
           );
@@ -787,8 +942,9 @@ const UserProgress: React.FC = () => {
               }
             })()}
         </div>
-        <div>
+        <div className="space-y-6">
           {renderRecommendations()}
+          {renderOptimalValues()}
         </div>
       </div>
     );
@@ -871,11 +1027,14 @@ const UserProgress: React.FC = () => {
                             Detalles
                           </th>
                         )}
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Acciones
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {progressData.map((data, index) => (
-                        <tr key={index}>
+                        <tr key={index} className={index === 0 ? 'bg-green-50' : ''}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {data.fecha.toLocaleDateString()}
                           </td>
@@ -898,6 +1057,17 @@ const UserProgress: React.FC = () => {
                               </div>
                             </td>
                           )}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button
+                              onClick={() => handleDelete(data.id, data.fecha)}
+                              className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
+                              title="Eliminar registro"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

@@ -45,6 +45,20 @@ class SeguimientoMetrica(SeguimientoMetricaBase):
     class Config:
         orm_mode = True
 
+class SeguimientoMetricaDelete(BaseModel):
+    tipo_metrica: str
+    fecha: date
+    id: int
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "tipo_metrica": "Peso corporal",
+                "fecha": "2024-03-20",
+                "id": 1
+            }
+        }
+
 @router.get("/seguimiento-metrica", response_model=List[SeguimientoMetrica])
 async def get_seguimiento_metricas(
     tipo_metrica: str = Query(..., description="Tipo de métrica a consultar"),
@@ -150,5 +164,51 @@ async def create_seguimiento_metrica(
     except Exception as e:
         db.rollback()
         logger.error(f"Error en create_seguimiento_metrica: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/seguimiento-metrica/delete", response_model=dict)
+async def delete_seguimiento_metrica(
+    seguimiento: SeguimientoMetricaDelete,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Elimina un registro específico de medición de métrica.
+    """
+    try:
+        logger.debug(f"Eliminando medición para usuario {current_user.id}")
+        logger.debug(f"Datos recibidos: {seguimiento.dict()}")
+
+        query = text("""
+            DELETE FROM seguimiento_metrica 
+            WHERE id = :id
+            AND id_usuario = :id_usuario 
+            AND tipo_metrica = :tipo_metrica 
+            AND fecha = :fecha
+        """)
+        
+        params = {
+            "id": seguimiento.id,
+            "id_usuario": current_user.id,
+            "tipo_metrica": seguimiento.tipo_metrica,
+            "fecha": seguimiento.fecha
+        }
+        logger.debug(f"Parámetros de eliminación: {params}")
+        
+        result = db.execute(query, params)
+        db.commit()
+        
+        if result.rowcount == 0:
+            logger.warning("No se encontró el registro para eliminar")
+            raise HTTPException(status_code=404, detail="Registro no encontrado")
+            
+        logger.info("Medición eliminada exitosamente")
+        return {"message": "Medición eliminada correctamente"}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error en delete_seguimiento_metrica: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e)) 

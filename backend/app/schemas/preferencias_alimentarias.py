@@ -1,15 +1,17 @@
 from pydantic import BaseModel
-from typing import Literal
+from typing import Literal, Optional
 
-class PreferenciaBase(BaseModel):
-    id_perfil: int
-    tipo: Literal['dieta', 'alergia', 'favorito']
+class PreferenciasAlimentariasBase(BaseModel):
+    tipo: str
     valor: str
+    otros_alergias: Optional[str] = None
+    otros_alimentos_favoritos: Optional[str] = None
+    id_perfil: int
 
-class PreferenciaCreate(PreferenciaBase):
+class PreferenciasAlimentariasCreate(PreferenciasAlimentariasBase):
     pass
 
-class PreferenciaOut(PreferenciaBase):
+class PreferenciasAlimentariasOut(PreferenciasAlimentariasBase):
     id: int
 
     class Config:

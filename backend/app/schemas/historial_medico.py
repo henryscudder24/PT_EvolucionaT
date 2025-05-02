@@ -1,11 +1,13 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class HistorialMedicoBase(BaseModel):
+    condicion_cronica: Optional[str] = None
+    medicamentos: Optional[str] = None
+    lesiones: Optional[str] = None
+    antecedentes_familiares: Optional[str] = None
+    otras_condiciones: Optional[str] = None
     id_perfil: int
-    condicion_cronica: str
-    medicamentos: str
-    lesiones: str
-    antecedentes_familiares: str
 
 class HistorialMedicoCreate(HistorialMedicoBase):
     pass

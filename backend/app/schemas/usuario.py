@@ -7,8 +7,10 @@ class UsuarioBase(BaseModel):
 class UsuarioCreate(UsuarioBase):
     contraseña: str
 
-class UsuarioOut(UsuarioBase):
+class UsuarioOut(BaseModel):
     id: int
+    nombre: str
+    correo: EmailStr
 
     class Config:
         from_attributes = True

@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Attempting login with:', { email });
       const response = await axios.post(
-        `${API_URL}/api/usuarios/login`,
+        `${API_URL}/api/usuarios/token`,
         {
           correo: email,
           contraseña: password,
@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       );
 
       console.log('Login response:', response.data);
-      const { token: accessToken, user: userData } = response.data;
+      const { access_token: accessToken, user: userData } = response.data;
       
       if (!accessToken || !userData) {
         throw new Error('Respuesta del servidor inválida');

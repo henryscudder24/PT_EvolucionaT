@@ -6,8 +6,8 @@ class PersonalInfo(BaseModel):
     
     genero: str
     edad: int
-    altura: int
-    peso: int
+    peso: float
+    altura: float
     nivelActividad: str
 
 class FoodPreferences(BaseModel):
@@ -17,51 +17,52 @@ class FoodPreferences(BaseModel):
     alergias: List[str]
     otrosAlergias: Optional[str] = None
     alimentosFavoritos: List[str]
-    alimentosEvitar: Optional[str] = None
+    otrosAlimentosFavoritos: Optional[str] = None
+    alimentosEvitados: List[str]
 
 class GoalsObjectives(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
-    objetivoPrincipal: List[str]
-    tiempoMeta: str
-    nivelCompromiso: int
-    medicionProgreso: List[str]
+    objetivoPrincipal: Optional[str]
+    tiempoMeta: Optional[str]
+    nivelCompromiso: Optional[int]
+    medicionProgreso: Optional[str]
 
-class FitnessLevel(BaseModel):
+class PhysicalCondition(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
-    frecuenciaEjercicio: str
-    tiposEjercicio: List[str]
-    equipamiento: List[str]
-    tiempoEjercicio: str
+    frecuenciaEjercicio: Optional[str]
+    tiempoDisponible: Optional[str]
+    ejerciciosPreferidos: List[str]
+    equipamientoDisponible: List[str]
 
 class MedicalHistory(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
-    condicionesCronicas: List[str]
+    condicionCronica: Optional[str]
     otrasCondiciones: Optional[str] = None
     medicamentos: Optional[str] = None
-    lesionesRecientes: Optional[str] = None
+    lesiones: Optional[str] = None
     antecedentesFamiliares: Optional[str] = None
 
 class DailyHabits(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
-    horasSueno: str
-    calidadSueno: str
-    nivelEstres: str
-    consumoAgua: str
-    comidasPorDia: str
-    habitosSnacks: str
-    horasPantallas: str
-    tipoTrabajo: str
+    horasSueno: Optional[str]
+    calidadSueno: Optional[str]
+    nivelEstres: Optional[str]
+    aguaDia: Optional[str]
+    comidasDia: Optional[str]
+    habitosSnack: Optional[str]
+    horasPantalla: Optional[str]
+    tipoTrabajo: Optional[str]
 
-class SurveyData(BaseModel):
+class SurveyDataResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
     personalInfo: PersonalInfo
-    foodPreferences: FoodPreferences
     goalsObjectives: GoalsObjectives
-    fitnessLevel: FitnessLevel
+    foodPreferences: FoodPreferences
+    physicalCondition: PhysicalCondition
     medicalHistory: MedicalHistory
     dailyHabits: DailyHabits 

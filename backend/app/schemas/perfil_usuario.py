@@ -10,6 +10,7 @@ class PerfilUsuarioBase(BaseModel):
     objetivo_principal: Optional[str]
     tiempo_meta: Optional[str]
     nivel_compromiso: Optional[int]
+    medicion_progreso: Optional[str]
     id_usuario: int
 
 class PerfilUsuarioCreate(PerfilUsuarioBase):

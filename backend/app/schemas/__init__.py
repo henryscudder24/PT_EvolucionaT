@@ -5,10 +5,10 @@ from .survey import (
     PersonalInfo,
     FoodPreferences,
     GoalsObjectives,
-    FitnessLevel,
+    PhysicalCondition,
     MedicalHistory,
     DailyHabits,
-    SurveyData
+    SurveyDataResponse
 )
 
 __all__ = [
@@ -19,8 +19,8 @@ __all__ = [
     'PersonalInfo',
     'FoodPreferences',
     'GoalsObjectives',
-    'FitnessLevel',
+    'PhysicalCondition',
     'MedicalHistory',
     'DailyHabits',
-    'SurveyData'
+    'SurveyDataResponse'
 ] 

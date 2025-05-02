@@ -117,6 +117,7 @@ class PerfilUsuario(Base):
     objetivo_principal: Mapped[Optional[str]] = mapped_column(String(50))
     tiempo_meta: Mapped[Optional[str]] = mapped_column(String(20))
     nivel_compromiso: Mapped[Optional[int]] = mapped_column(TINYINT)
+    medicion_progreso: Mapped[Optional[str]] = mapped_column(String(255))
     id_usuario: Mapped[Optional[int]] = mapped_column(Integer)
 
     usuario: Mapped[Optional['Usuario']] = relationship('Usuario', back_populates='perfil_usuario')
@@ -269,6 +270,7 @@ class HistorialMedico(Base):
     medicamentos: Mapped[Optional[str]] = mapped_column(Text)
     lesiones: Mapped[Optional[str]] = mapped_column(Text)
     antecedentes_familiares: Mapped[Optional[str]] = mapped_column(Text)
+    otras_condiciones: Mapped[Optional[str]] = mapped_column(Text)
 
     perfil_usuario: Mapped[Optional['PerfilUsuario']] = relationship('PerfilUsuario', back_populates='historial_medico')
 
@@ -301,6 +303,8 @@ class PreferenciasAlimentarias(Base):
     id_perfil: Mapped[Optional[int]] = mapped_column(Integer)
     tipo: Mapped[Optional[str]] = mapped_column(Enum('dieta', 'alergia', 'favorito'))
     valor: Mapped[Optional[str]] = mapped_column(String(100))
+    otros_alergias: Mapped[Optional[str]] = mapped_column(String(255))
+    otros_alimentos_favoritos: Mapped[Optional[str]] = mapped_column(String(255))
 
     perfil_usuario: Mapped[Optional['PerfilUsuario']] = relationship('PerfilUsuario', back_populates='preferencias_alimentarias')
 

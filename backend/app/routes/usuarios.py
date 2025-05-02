@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.schemas import UsuarioCreate, UsuarioOut, UsuarioLogin
 from app.database import get_db
@@ -10,6 +10,10 @@ from datetime import timedelta
 import logging
 from ..utils.health_calculations import calculate_all_metrics
 from decimal import Decimal
+from ..models.base import User
+from app.schemas.usuario import UsuarioCreate, UsuarioOut
+from app.crud import usuario as crud_usuario
+from typing import List
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -22,21 +26,30 @@ async def options_handler(request: Request):
     return {"message": "OK"}
 
 @router.post("/registro", response_model=UsuarioOut)
-def registrar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
-    try:
-        existente = get_usuario_por_correo(db, usuario.correo)
-        if existente:
-            raise HTTPException(status_code=400, detail="El correo ya está registrado.")
-        return crear_usuario(db, usuario)
-    except Exception as e:
-        logger.error(f"Error en registro: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+def registrar_usuario(datos: UsuarioCreate, db: Session = Depends(get_db)):
+    # Verificar si el usuario ya existe
+    db_usuario = crud_usuario.get_usuario_por_correo(db, datos.correo)
+    if db_usuario:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El correo ya está registrado"
+        )
+    
+    # Crear nuevo usuario
+    usuario = crud_usuario.crear_usuario(db, datos)
+    
+    # Convertir el usuario a UsuarioOut
+    return UsuarioOut(
+        id=usuario.id,
+        nombre=usuario.nombre,
+        correo=usuario.email
+    )
 
-@router.post("/login")
+@router.post("/token")
 async def login(usuario: UsuarioLogin, db: Session = Depends(get_db)):
     try:
         logger.info(f"Intento de login para correo: {usuario.correo}")
-        user = get_usuario_por_correo(db, usuario.correo)
+        user = crud_usuario.get_usuario_por_correo(db, usuario.correo)
         
         if not user:
             logger.warning(f"Usuario no encontrado: {usuario.correo}")
@@ -45,7 +58,7 @@ async def login(usuario: UsuarioLogin, db: Session = Depends(get_db)):
                 detail="El correo electrónico no está registrado"
             )
         
-        if not bcrypt.verify(usuario.contraseña, user.contraseña):
+        if not bcrypt.verify(usuario.contraseña, user.hashed_password):
             logger.warning(f"Contraseña incorrecta para usuario: {usuario.correo}")
             raise HTTPException(
                 status_code=401,
@@ -55,16 +68,17 @@ async def login(usuario: UsuarioLogin, db: Session = Depends(get_db)):
         # Create access token
         access_token_expires = timedelta(minutes=30)
         access_token = create_access_token(
-            data={"sub": user.correo},
+            data={"sub": user.email},
             expires_delta=access_token_expires
         )
         
         response_data = {
-            "token": access_token,
+            "access_token": access_token,
+            "token_type": "bearer",
             "user": {
                 "id": user.id,
                 "nombre": user.nombre,
-                "correo": user.correo
+                "correo": user.email
             }
         }
         logger.info(f"Login exitoso para usuario: {usuario.correo}")
@@ -78,22 +92,22 @@ async def login(usuario: UsuarioLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.get("/me", response_model=UsuarioOut)
-async def get_current_user_data(current_user: models.Usuario = Depends(get_current_user)):
+async def get_current_user_data(current_user: User = Depends(get_current_user)):
     try:
-        logger.info(f"Obteniendo datos del usuario: {current_user.correo}")
+        logger.info(f"Obteniendo datos del usuario: {current_user.email}")
         return {
             "id": current_user.id,
             "nombre": current_user.nombre,
-            "correo": current_user.correo
+            "correo": current_user.email
         }
     except Exception as e:
         logger.error(f"Error al obtener datos del usuario: {str(e)}")
         raise HTTPException(status_code=500, detail="Error al obtener datos del usuario")
 
 @router.get("/me/survey-status")
-async def get_survey_status(current_user: models.Usuario = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_survey_status(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
-        logger.info(f"Verificando estado de encuesta para usuario: {current_user.correo}")
+        logger.info(f"Verificando estado de encuesta para usuario: {current_user.email}")
         perfil = db.query(models.PerfilUsuario).filter(
             models.PerfilUsuario.id_usuario == current_user.id
         ).first()
@@ -173,9 +187,9 @@ async def get_survey_status(current_user: models.Usuario = Depends(get_current_u
         )
 
 @router.get("/me/health-metrics")
-async def get_health_metrics(current_user: models.Usuario = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_health_metrics(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
-        logger.info(f"Obteniendo métricas de salud para usuario: {current_user.correo}")
+        logger.info(f"Obteniendo métricas de salud para usuario: {current_user.email}")
         perfil = db.query(models.PerfilUsuario).filter(
             models.PerfilUsuario.id_usuario == current_user.id
         ).first()
@@ -220,10 +234,10 @@ async def get_health_metrics(current_user: models.Usuario = Depends(get_current_
 @router.post("/calculate-metrics")
 async def calculate_metrics(
     data: dict,
-    current_user: models.Usuario = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     try:
-        logger.info(f"Calculando métricas para usuario: {current_user.correo}")
+        logger.info(f"Calculando métricas para usuario: {current_user.email}")
         
         # Validar datos requeridos
         required_fields = ['edad', 'genero', 'peso', 'altura']

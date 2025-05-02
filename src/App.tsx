@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import Login from "./components/pages/auth/Login";
 import Register from "./components/pages/auth/Register";
 import UserProfile from "./components/pages/UserProfile";
+import UserProgress from "./components/pages/UserProgress";
 import Survey from "./components/Survey";
 import { AuthProvider } from "./context/AuthContext";
 import SurveyProgress from "./components/SurveyProgress";
@@ -42,6 +43,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UserProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/progress"
+              element={
+                <ProtectedRoute>
+                  <UserProgress />
                 </ProtectedRoute>
               }
             />

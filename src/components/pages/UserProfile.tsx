@@ -183,6 +183,14 @@ const UserProfile: React.FC = () => {
                 {surveyStatus.completed ? 'Modificar Preferencias' : 'Completar Encuesta'}
               </button>
               <button
+                onClick={() => navigate('/progress')}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-md 
+                shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 
+                font-semibold text-lg border-2 border-blue-400 hover:from-blue-600 hover:to-blue-700"
+              >
+                Monitorea tu cambio
+              </button>
+              <button
                 onClick={handleLogout}
                 className="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-colors"
               >

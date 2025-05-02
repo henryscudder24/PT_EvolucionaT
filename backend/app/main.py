@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import survey, usuarios, survey_data
+from .routes import survey, usuarios, survey_data, seguimiento
 from .database import engine
 from .models import models_auto as models
 
@@ -33,6 +33,7 @@ app.add_middleware(
 app.include_router(survey.router, prefix="/api")
 app.include_router(usuarios.router, prefix="/api/usuarios")
 app.include_router(survey_data.router, prefix="/api")
+app.include_router(seguimiento.router, prefix="/api")
 
 @app.get("/")
 async def root():

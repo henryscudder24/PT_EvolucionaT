@@ -42,7 +42,7 @@ interface SurveyContextType {
   resetSurvey: () => void;
   isLastStep: boolean;
   isStepComplete: (step: number) => boolean;
-  finishSurvey: () => Promise<void>;
+  finishSurvey: () => Promise<boolean>;
 }
 
 const SurveyContext = createContext<SurveyContextType | undefined>(undefined);
@@ -306,11 +306,13 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       if (response.status === 200) {
         toast.success('¡Encuesta completada con éxito!');
         resetSurvey();
-        navigate('/profile');
+        // No redirigimos aquí, dejamos que el componente Completion maneje la redirección
+        return true;
       }
     } catch (error) {
       console.error('Error al completar la encuesta:', error);
       toast.error('Hubo un error al completar la encuesta. Por favor, intenta nuevamente.');
+      throw error; // Propagar el error para que el componente Completion pueda manejarlo
     }
   }, [surveyData, navigate, resetSurvey]);
 

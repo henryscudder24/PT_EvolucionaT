@@ -182,6 +182,16 @@ const UserProfile: React.FC = () => {
               >
                 {surveyStatus.completed ? 'Modificar Preferencias' : 'Completar Encuesta'}
               </button>
+              {surveyStatus.completed && (
+                <button
+                  onClick={() => navigate('/recommendations')}
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-4 rounded-md 
+                  shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 
+                  font-semibold text-lg border-2 border-green-400 hover:from-green-600 hover:to-green-700"
+                >
+                  Tu Plan Ajustado
+                </button>
+              )}
               <button
                 onClick={() => navigate('/progress')}
                 className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-md 

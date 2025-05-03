@@ -1,11 +1,77 @@
-import React from 'react';
+import { useState } from 'react';
 import { useSurvey } from '../../context/SurveyContext';
 import { useAuth } from '../../context/AuthContext';
-import ContinueButton from '../ContinueButton';
+import { useNavigate } from 'react-router-dom';
+import { CircularProgress, Alert } from '@mui/material';
+import axios from 'axios';
 
 const Completion: React.FC = () => {
-  const { finishSurvey } = useSurvey();
-  const { user } = useAuth();
+  const { finishSurvey, surveyData } = useSurvey();
+  const { token } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const generatePlans = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Primero completar la encuesta y guardar las métricas
+      await finishSurvey();
+
+      // Llamar a ambas APIs en paralelo
+      const [trainingResponse, mealResponse] = await Promise.all([
+        axios.post('http://localhost:8000/api/generate-training-plan', {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.post('http://localhost:8000/api/generate-meal-plan', {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      // Guardar los planes en localStorage
+      localStorage.setItem('trainingPlan', JSON.stringify(trainingResponse.data));
+      localStorage.setItem('mealPlan', JSON.stringify(mealResponse.data));
+
+      // Redirigir a la página de recomendaciones
+      navigate('/recommendations');
+    } catch (err) {
+      console.error('Error al generar planes:', err);
+      setError('Hubo un error al generar tus planes personalizados. Por favor, intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContinue = () => {
+    generatePlans();
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center p-8">
+        <CircularProgress />
+        <p className="mt-4 text-gray-600">
+          Generando tus planes personalizados...
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <Alert severity="error">{error}</Alert>
+        <button
+          onClick={handleContinue}
+          className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Intentar de nuevo
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="text-center">
@@ -35,76 +101,12 @@ const Completion: React.FC = () => {
         </p>
       </div>
 
-      <div className="bg-blue-50 rounded-lg p-6 mb-8">
-        <h4 className="text-lg font-semibold text-blue-900 mb-4">
-          Próximos pasos
-        </h4>
-        <ul className="text-left space-y-3">
-          <li className="flex items-start">
-            <svg
-              className="w-5 h-5 text-blue-500 mr-2 mt-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-gray-700">
-              Revisaremos tu información y crearemos un plan personalizado
-            </span>
-          </li>
-          <li className="flex items-start">
-            <svg
-              className="w-5 h-5 text-blue-500 mr-2 mt-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-gray-700">
-              Recibirás un correo electrónico con tu plan en las próximas 24 horas
-            </span>
-          </li>
-          <li className="flex items-start">
-            <svg
-              className="w-5 h-5 text-blue-500 mr-2 mt-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-gray-700">
-              Podrás acceder a tu plan y seguimiento en tu perfil
-            </span>
-          </li>
-        </ul>
-      </div>
-
-      <ContinueButton
-        message={`Estás cada vez más cerca de alcanzar tus objetivos ${user?.nombre || ''}`}
-        onContinue={finishSurvey}
-        buttonText="Ir al siguiente paso"
-      />
+      <button
+        onClick={handleContinue}
+        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        Ir al siguiente paso
+      </button>
     </div>
   );
 };

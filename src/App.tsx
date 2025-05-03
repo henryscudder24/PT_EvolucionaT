@@ -23,6 +23,7 @@ import LandingPage from './components/LandingPage';
 import About from './components/pages/About';
 import Services from './components/pages/Services';
 import Contact from './components/pages/Contact';
+import UserRecomendations from './components/pages/UserRecomendations';
 
 function App() {
   return (
@@ -59,6 +60,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Survey />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recommendations"
+              element={
+                <ProtectedRoute>
+                  <UserRecomendations />
                 </ProtectedRoute>
               }
             />

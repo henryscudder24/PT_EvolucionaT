@@ -78,7 +78,7 @@ async def generate_training_plan(
                 {"role": "system", "content": "Eres un experto en nutrición y entrenamiento."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=7000
+            max_tokens=8000
         )
 
         # Devolver el plan de entrenamiento generado
@@ -92,4 +92,75 @@ async def generate_training_plan(
         raise HTTPException(
             status_code=500,
             detail=f"Error al generar el plan de entrenamiento: {str(e)}"
+        )
+
+@router.post("/generate-meal-plan")
+async def generate_meal_plan(
+    credentials: HTTPAuthorizationCredentials = Security(security),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Obtener datos del usuario
+        perfil = db.query(models.PerfilUsuario).filter(
+            models.PerfilUsuario.id_usuario == current_user.id
+        ).first()
+
+        if not perfil:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de usuario no encontrado"
+            )
+
+        # Obtener preferencias alimentarias
+        preferencias = db.query(models.PreferenciasAlimentarias).filter(
+            models.PreferenciasAlimentarias.id_perfil == perfil.id
+        ).all()
+
+        # Separar preferencias por tipo
+        dietas = [p.valor for p in preferencias if p.tipo == 'dieta']
+        favoritos = [p.valor for p in preferencias if p.tipo == 'favorito']
+        alergias = [p.valor for p in preferencias if p.tipo == 'alergia']
+
+        # Construir el prompt
+        prompt = f"""
+        El usuario:
+        - Genero: {perfil.genero}
+        - Objetivo: {perfil.objetivo_principal}
+        - Dieta a seguir: {', '.join(dietas)}
+        - Ingredientes principales: {', '.join(favoritos)}
+        - Alimentos a evitar: {', '.join(alergias)}
+
+        Genera una tabla de comidas con columnas:
+        Fecha (dd-mm-yyyy) | Comida | Plato | Proteínas | Grasas | Carbohidratos | Kcal Totales | Link de receta
+
+        – Cubre desde {datetime.now().strftime('%d-%m-%Y')} hasta {(datetime.now() + timedelta(days=30)).strftime('%d-%m-%Y')}
+        – No saltarse ningún dia desde el dia de hoy hasta el dia 30
+        – Cada día incluye 6 comidas debe ser: Desayuno → Snack1 → Almuerzo → Snack2 → Cena → Snack3
+        – Ajusta cada plato según restricciones, favoritos y evitar.
+        – Añade un enlace válido de YouTube para cada receta. Elige solo URLs que devuelvan status 200 al hacer HEAD.
+        – Devuelve solo la tabla, sin texto adicional.
+        """
+
+        # Llamar a OpenAI
+        response = openai.chat.completions.create(
+            model="gpt-4.1",
+            messages=[
+                {"role": "system", "content": "Eres un experto en nutrición y planificación de comidas."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=14000
+        )
+
+        # Devolver el plan de comidas generado
+        return {
+            "meal_plan": response.choices[0].message.content,
+            "generated_at": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error al generar el plan de comidas: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al generar el plan de comidas: {str(e)}"
         ) 

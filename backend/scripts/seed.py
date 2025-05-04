@@ -60,7 +60,9 @@ dietas = ["Omnívora", "Vegetariana", "Vegana", "Pescetariana", "Paleo", "Cetog�
 # ---------------------------
 estados_plan = ["Activo", "Pausado", "Finalizado"]
 for desc in estados_plan:
-    db.add(models.EstadoPlan(descripcion=desc))
+    estado = models.EstadoPlan(descripcion=desc)
+    db.add(estado)
+db.commit()
 
 # ---------------------------
 # Catálogo: Estado_Meta

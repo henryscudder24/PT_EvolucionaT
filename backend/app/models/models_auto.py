@@ -147,6 +147,7 @@ class PlanDietaUsuario(Base):
     estado_plan: Mapped[Optional['EstadoPlan']] = relationship('EstadoPlan', back_populates='plan_dieta_usuario')
     usuario: Mapped[Optional['Usuario']] = relationship('Usuario', back_populates='plan_dieta_usuario')
     seguimiento_dieta: Mapped[List['SeguimientoDieta']] = relationship('SeguimientoDieta', back_populates='plan_dieta_usuario')
+    plan_comidas_diario: Mapped[List['PlanComidasDiario']] = relationship('PlanComidasDiario', back_populates='plan_dieta_usuario')
 
 
 class PlanRutinaUsuario(Base):
@@ -162,6 +163,7 @@ class PlanRutinaUsuario(Base):
 
     usuario: Mapped[Optional['Usuario']] = relationship('Usuario', back_populates='plan_rutina_usuario')
     seguimiento_rutina: Mapped[List['SeguimientoRutina']] = relationship('SeguimientoRutina', back_populates='plan_rutina_usuario')
+    plan_entrenamiento_diario: Mapped[List['PlanEntrenamientoDiario']] = relationship('PlanEntrenamientoDiario', back_populates='plan_rutina_usuario')
 
 
 class ProgresoUsuario(Base):
@@ -352,3 +354,70 @@ class SeguimientoRutina(Base):
     comentarios: Mapped[Optional[str]] = mapped_column(Text)
 
     plan_rutina_usuario: Mapped[Optional['PlanRutinaUsuario']] = relationship('PlanRutinaUsuario', back_populates='seguimiento_rutina')
+
+
+class PlanEntrenamientoDiario(Base):
+    __tablename__ = 'Plan_Entrenamiento_Diario'
+    __table_args__ = (
+        ForeignKeyConstraint(['id_plan_rutina'], ['Plan_Rutina_Usuario.id'], name='plan_entrenamiento_diario_ibfk_1'),
+        Index('idx_plan_rutina', 'id_plan_rutina')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id_plan_rutina: Mapped[Optional[int]] = mapped_column(Integer)
+    fecha: Mapped[Optional[datetime.date]] = mapped_column(Date)
+    tipo_dia: Mapped[Optional[str]] = mapped_column(String(20))
+
+    plan_rutina_usuario: Mapped[Optional['PlanRutinaUsuario']] = relationship('PlanRutinaUsuario', back_populates='plan_entrenamiento_diario')
+    detalles_entrenamiento: Mapped[List['DetallePlanEntrenamiento']] = relationship('DetallePlanEntrenamiento', back_populates='plan_entrenamiento_diario')
+
+
+class DetallePlanEntrenamiento(Base):
+    __tablename__ = 'Detalle_Plan_Entrenamiento'
+    __table_args__ = (
+        ForeignKeyConstraint(['id_plan_diario'], ['Plan_Entrenamiento_Diario.id'], name='detalle_plan_entrenamiento_ibfk_1'),
+        Index('idx_plan_diario', 'id_plan_diario')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id_plan_diario: Mapped[Optional[int]] = mapped_column(Integer)
+    deporte: Mapped[Optional[str]] = mapped_column(String(50))
+    ejercicio: Mapped[Optional[str]] = mapped_column(String(100))
+    repeticiones: Mapped[Optional[int]] = mapped_column(Integer)
+    series: Mapped[Optional[int]] = mapped_column(Integer)
+
+    plan_entrenamiento_diario: Mapped[Optional['PlanEntrenamientoDiario']] = relationship('PlanEntrenamientoDiario', back_populates='detalles_entrenamiento')
+
+
+class PlanComidasDiario(Base):
+    __tablename__ = 'Plan_Comidas_Diario'
+    __table_args__ = (
+        ForeignKeyConstraint(['id_plan_dieta'], ['Plan_Dieta_Usuario.id'], name='plan_comidas_diario_ibfk_1'),
+        Index('idx_plan_dieta', 'id_plan_dieta')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id_plan_dieta: Mapped[Optional[int]] = mapped_column(Integer)
+    fecha: Mapped[Optional[datetime.date]] = mapped_column(Date)
+
+    plan_dieta_usuario: Mapped[Optional['PlanDietaUsuario']] = relationship('PlanDietaUsuario', back_populates='plan_comidas_diario')
+    detalles_comidas: Mapped[List['DetallePlanComidas']] = relationship('DetallePlanComidas', back_populates='plan_comidas_diario')
+
+
+class DetallePlanComidas(Base):
+    __tablename__ = 'Detalle_Plan_Comidas'
+    __table_args__ = (
+        ForeignKeyConstraint(['id_plan_diario'], ['Plan_Comidas_Diario.id'], name='detalle_plan_comidas_ibfk_1'),
+        Index('idx_plan_diario', 'id_plan_diario')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id_plan_diario: Mapped[Optional[int]] = mapped_column(Integer)
+    tipo_comida: Mapped[Optional[str]] = mapped_column(String(50))
+    plato: Mapped[Optional[str]] = mapped_column(String(255))
+    proteinas: Mapped[Optional[decimal.Decimal]] = mapped_column(DECIMAL(5, 2))
+    grasas: Mapped[Optional[decimal.Decimal]] = mapped_column(DECIMAL(5, 2))
+    carbohidratos: Mapped[Optional[decimal.Decimal]] = mapped_column(DECIMAL(5, 2))
+    calorias: Mapped[Optional[decimal.Decimal]] = mapped_column(DECIMAL(6, 2))
+
+    plan_comidas_diario: Mapped[Optional['PlanComidasDiario']] = relationship('PlanComidasDiario', back_populates='detalles_comidas')

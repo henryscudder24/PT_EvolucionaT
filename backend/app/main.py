@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import survey, usuarios, survey_data, seguimiento, training
+from .routes import survey, usuarios, survey_data, seguimiento, training, meal, youtube
 from .database import engine
 from .models import models_auto as models
 
@@ -35,6 +35,8 @@ app.include_router(usuarios.router, prefix="/api/usuarios")
 app.include_router(survey_data.router, prefix="/api")
 app.include_router(seguimiento.router, prefix="/api")
 app.include_router(training.router, prefix="/api")
+app.include_router(meal.router, prefix="/api")
+app.include_router(youtube.router, prefix="/api", tags=["youtube"])
 
 @app.get("/")
 async def root():

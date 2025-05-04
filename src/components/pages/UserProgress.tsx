@@ -146,10 +146,10 @@ const UserProgress: React.FC = () => {
 
   const getIMCCategory = (imc: number): string => {
     if (imc < 18.5) return 'Bajo peso';
-    if (imc < 25) return 'Normal (saludable)';
-    if (imc < 30) return 'Sobrepeso';
-    if (imc < 35) return 'Obesidad grado I';
-    if (imc < 40) return 'Obesidad grado II';
+    if (imc < 27) return 'Normal (saludable)';
+    if (imc < 32) return 'Sobrepeso';
+    if (imc < 37) return 'Obesidad grado I';
+    if (imc < 42) return 'Obesidad grado II';
     return 'Obesidad grado III';
   };
 
@@ -405,13 +405,13 @@ const UserProgress: React.FC = () => {
                 <p><strong>Categorías de IMC:</strong></p>
                 <ul className="list-disc pl-5 space-y-2">
                   <li>Bajo peso: IMC menor a 18.5</li>
-                  <li>Normal: IMC entre 18.5 y 24.9</li>
-                  <li>Sobrepeso: IMC entre 25 y 29.9</li>
-                  <li>Obesidad Grado I: IMC entre 30 y 34.9</li>
-                  <li>Obesidad Grado II: IMC entre 35 y 39.9</li>
-                  <li>Obesidad Grado III: IMC mayor o igual a 40</li>
+                  <li>Normal: IMC entre 18.5 y 26.9</li>
+                  <li>Sobrepeso: IMC entre 27 y 31.9</li>
+                  <li>Obesidad Grado I: IMC entre 32 y 36.9</li>
+                  <li>Obesidad Grado II: IMC entre 37 y 41.9</li>
+                  <li>Obesidad Grado III: IMC mayor o igual a 42</li>
                 </ul>
-                <p className="mt-3"><strong>Importante:</strong> El IMC es una herramienta de screening, no un diagnóstico médico.</p>
+                <p className="mt-3"><strong>Importante:</strong> El IMC es una herramienta de screening, no un diagnóstico médico. La composición corporal y otros factores de salud también son importantes.</p>
               </div>
             </div>
           );
@@ -547,14 +547,14 @@ const UserProgress: React.FC = () => {
                 <p><strong>Rangos de IMC:</strong></p>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>Bajo peso: {'<'} 18.5</li>
-                  <li>Normal: 18.5 - 24.9</li>
-                  <li>Sobrepeso: 25 - 29.9</li>
-                  <li>Obesidad I: 30 - 34.9</li>
-                  <li>Obesidad II: 35 - 39.9</li>
-                  <li>Obesidad III: {'≥'} 40</li>
+                  <li>Normal: 18.5 - 26.9</li>
+                  <li>Sobrepeso: 27 - 31.9</li>
+                  <li>Obesidad I: 32 - 36.9</li>
+                  <li>Obesidad II: 37 - 41.9</li>
+                  <li>Obesidad III: {'≥'} 42</li>
                 </ul>
-                <p className="mt-3"><strong>IMC Óptimo:</strong> 18.5 - 24.9</p>
-                <p className="text-sm italic">Nota: El IMC es una herramienta de screening y no considera la composición corporal.</p>
+                <p className="mt-3"><strong>IMC Óptimo:</strong> 18.5 - 26.9</p>
+                <p className="text-sm italic">Nota: El IMC es una herramienta de screening y no considera la composición corporal ni otros factores de salud individuales.</p>
               </div>
             </div>
           );

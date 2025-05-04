@@ -314,8 +314,6 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       if (response.status === 200) {
         toast.success('¡Encuesta completada con éxito!');
-        // Reseteamos la encuesta después de completarla exitosamente
-        resetSurvey();
         return true;
       }
       return false;
@@ -332,7 +330,7 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }
       return false;
     }
-  }, [surveyData, navigate, resetSurvey]);
+  }, [surveyData, navigate]);
 
   return (
     <SurveyContext.Provider

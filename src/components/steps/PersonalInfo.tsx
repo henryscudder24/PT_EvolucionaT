@@ -145,6 +145,7 @@ const PersonalInfo: React.FC = () => {
           frecuenciaCardiacaMaxima={healthMetrics.frecuencia_cardiaca_maxima}
           pesoActual={healthMetrics.peso_actual}
           diferenciaPeso={healthMetrics.diferencia_peso}
+          imc={healthMetrics.imc}
         />
       )}
 

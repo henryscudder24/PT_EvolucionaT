@@ -284,7 +284,8 @@ async def calculate_metrics(
             "peso_ideal": metrics["peso_ideal"],
             "frecuencia_cardiaca_maxima": metrics["frecuencia_cardiaca_maxima"],
             "peso_actual": float(peso),
-            "diferencia_peso": round(float(peso) - metrics["peso_ideal"], 2)
+            "diferencia_peso": round(float(peso) - metrics["peso_ideal"], 2),
+            "imc": metrics["imc"]
         }
         
     except ValueError as ve:

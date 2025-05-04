@@ -29,6 +29,10 @@ interface HealthMetrics {
   frecuencia_cardiaca_maxima: number;
   peso_actual: number;
   diferencia_peso: number;
+  imc?: {
+    valor: number;
+    categoria: string;
+  };
 }
 
 const UserProfile: React.FC = () => {
@@ -150,6 +154,12 @@ const UserProfile: React.FC = () => {
                     {healthMetrics.diferencia_peso > 0 ? '+' : ''}{healthMetrics.diferencia_peso} kg
                   </p>
                 </div>
+                {healthMetrics.imc && (
+                  <div className="col-span-2">
+                    <p className="text-gray-600">Índice de Masa Corporal (IMC):</p>
+                    <p className="font-medium">{healthMetrics.imc.valor} - {healthMetrics.imc.categoria}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

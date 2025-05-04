@@ -65,7 +65,41 @@ def calculate_max_heart_rate(edad: int) -> int:
     fcm = 208 - (0.7 * edad)
     return round(fcm)
 
-def calculate_all_metrics(edad: int, genero: str, peso: Decimal, altura: Decimal) -> Dict[str, Union[float, int]]:
+def calculate_imc(peso: Decimal, altura: Decimal) -> Dict[str, Union[float, str]]:
+    """
+    Calcula el Índice de Masa Corporal (IMC) y su categoría.
+    
+    Args:
+        peso: Peso en kilogramos
+        altura: Altura en centímetros
+    
+    Returns:
+        Dict con el valor del IMC y su categoría
+    """
+    peso_float = float(peso)
+    altura_float = float(altura) / 100  # Convertir a metros
+    imc = peso_float / (altura_float * altura_float)
+    
+    # Determinar categoría
+    if imc < 18.5:
+        categoria = "Bajo peso"
+    elif imc < 27:
+        categoria = "Normal (saludable)"
+    elif imc < 32:
+        categoria = "Sobrepeso"
+    elif imc < 37:
+        categoria = "Obesidad grado I"
+    elif imc < 42:
+        categoria = "Obesidad grado II"
+    else:
+        categoria = "Obesidad grado III"
+    
+    return {
+        "valor": round(imc, 2),
+        "categoria": categoria
+    }
+
+def calculate_all_metrics(edad: int, genero: str, peso: Decimal, altura: Decimal) -> Dict[str, Union[float, int, Dict]]:
     """
     Calcula todas las métricas de salud.
     
@@ -78,8 +112,10 @@ def calculate_all_metrics(edad: int, genero: str, peso: Decimal, altura: Decimal
     Returns:
         Dict con todas las métricas calculadas
     """
+    imc_data = calculate_imc(peso, altura)
     return {
         "tmb": calculate_tmb(edad, genero, peso, altura),
         "peso_ideal": calculate_ideal_weight(altura, genero),
-        "frecuencia_cardiaca_maxima": calculate_max_heart_rate(edad)
+        "frecuencia_cardiaca_maxima": calculate_max_heart_rate(edad),
+        "imc": imc_data
     } 

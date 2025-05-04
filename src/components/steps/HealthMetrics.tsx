@@ -7,6 +7,10 @@ interface HealthMetricsProps {
   frecuenciaCardiacaMaxima: number;
   pesoActual: number;
   diferenciaPeso: number;
+  imc?: {
+    valor: number;
+    categoria: string;
+  };
 }
 
 const HealthMetrics: React.FC<HealthMetricsProps> = ({
@@ -14,7 +18,8 @@ const HealthMetrics: React.FC<HealthMetricsProps> = ({
   pesoIdeal,
   frecuenciaCardiacaMaxima,
   pesoActual,
-  diferenciaPeso
+  diferenciaPeso,
+  imc
 }) => {
   return (
     <motion.div
@@ -51,6 +56,14 @@ const HealthMetrics: React.FC<HealthMetricsProps> = ({
             {diferenciaPeso > 0 ? 'Peso por encima del ideal' : 'Peso por debajo del ideal'}
           </p>
         </div>
+
+        {imc && (
+          <div className="bg-yellow-50 p-4 rounded-lg col-span-2">
+            <p className="text-sm text-gray-600">Índice de Masa Corporal (IMC)</p>
+            <p className="text-lg font-semibold text-yellow-700">{imc.valor}</p>
+            <p className="text-xs text-gray-500 mt-1">{imc.categoria}</p>
+          </div>
+        )}
       </div>
     </motion.div>
   );

@@ -25,11 +25,17 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-8">
             {user ? (
               <>
-                <Link to="/profile" className="text-gray-700 hover:text-primary">
+                <Link to="/profile" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors">
                   Mi Perfil
                 </Link>
                 <Link to="/survey" className="text-gray-700 hover:text-primary">
                   Encuesta
+                </Link>
+                <Link to="/services" className="text-gray-700 hover:text-primary">
+                  Servicios
+                </Link>
+                <Link to="/about" className="text-gray-700 hover:text-primary">
+                  Sobre Nosotros
                 </Link>
                 <button
                   onClick={handleLogout}

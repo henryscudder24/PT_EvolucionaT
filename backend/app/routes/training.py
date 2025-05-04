@@ -143,15 +143,10 @@ async def generate_meal_plan(
         1. Formato de tabla con columnas:
         Fecha (dd-mm-yyyy) | Comida | Plato | Proteínas | Grasas | Carbohidratos | Kcal Totales
 
-        3. Estructura diaria:
-        - Desayuno
-        - Snack 1
-        - Almuerzo
-        - Snack 2
-        - Cena
 
         – Cubre desde {datetime.now().strftime('%d-%m-%Y')} hasta {(datetime.now() + timedelta(days=30)).strftime('%d-%m-%Y')}
-        – *Importante* No saltar ningún día
+        – *Importante* Todos los días deben estar representados en la tabla
+        – Para cada día incluye Desayuno, Snack 1, Almuerzo, Snack 2 y Cena, cada uno en su fila
         – Respetar estrictamente las alergias y restricciones
         – Priorizar los alimentos favoritos del usuario
         – ¨Importante¨ Devuelve solo la tabla, sin texto adicional ni comentarios.

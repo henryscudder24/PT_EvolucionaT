@@ -177,7 +177,11 @@ const UserProfile: React.FC = () => {
             <h2 className="text-xl font-semibold mb-2">Acciones</h2>
             <div className="space-y-2">
               <button
-                onClick={() => navigate('/survey')}
+                onClick={() => {
+                  // Limpiar cualquier estado de encuesta anterior
+                  localStorage.removeItem('surveyData');
+                  navigate('/survey');
+                }}
                 className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark transition-colors"
               >
                 {surveyStatus.completed ? 'Modificar Preferencias' : 'Completar Encuesta'}

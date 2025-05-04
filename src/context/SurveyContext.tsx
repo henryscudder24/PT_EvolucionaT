@@ -164,6 +164,7 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         tipoTrabajo: 'Sedentario'
       }
     });
+    localStorage.removeItem('surveyData');
   }, []);
 
   const isLastStep = currentStep === totalSteps;
@@ -173,29 +174,27 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       case 1:
         return !!(
           surveyData.personalInfo.genero &&
-          surveyData.personalInfo.genero !== '' &&
           surveyData.personalInfo.edad &&
           surveyData.personalInfo.edad > 0 &&
           surveyData.personalInfo.altura &&
           surveyData.personalInfo.altura > 0 &&
           surveyData.personalInfo.peso &&
           surveyData.personalInfo.peso > 0 &&
-          surveyData.personalInfo.nivelActividad &&
-          surveyData.personalInfo.nivelActividad !== ''
+          surveyData.personalInfo.nivelActividad
         );
       case 2:
         return !!(
           surveyData.foodPreferences.tipoDieta.length > 0 &&
           surveyData.foodPreferences.alimentosFavoritos.length > 0 &&
-          // Si hay "Otros" en alergias, debe tener texto en otrosAlergias
-          (!surveyData.foodPreferences.alergias.includes('Otros') || 
-           (surveyData.foodPreferences.alergias.includes('Otros') && surveyData.foodPreferences.otrosAlergias.trim() !== ''))
+          // Si hay "Otro" en alergias, debe tener texto en otrosAlergias
+          (!surveyData.foodPreferences.alergias.includes('Otro') || 
+           (surveyData.foodPreferences.alergias.includes('Otro') && 
+            surveyData.foodPreferences.otrosAlergias?.trim() !== ''))
         );
       case 3:
         return !!(
           surveyData.goalsObjectives.objetivoPrincipal.length > 0 &&
           surveyData.goalsObjectives.tiempoMeta &&
-          surveyData.goalsObjectives.tiempoMeta !== '' &&
           surveyData.goalsObjectives.nivelCompromiso &&
           surveyData.goalsObjectives.nivelCompromiso > 0 &&
           surveyData.goalsObjectives.medicionProgreso.length > 0
@@ -203,32 +202,22 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       case 4:
         return !!(
           surveyData.fitnessLevel.frecuenciaEjercicio &&
-          surveyData.fitnessLevel.frecuenciaEjercicio !== '' &&
           surveyData.fitnessLevel.tiposEjercicio.length > 0 &&
           surveyData.fitnessLevel.equipamiento.length > 0 &&
-          surveyData.fitnessLevel.tiempoEjercicio &&
-          surveyData.fitnessLevel.tiempoEjercicio !== ''
+          surveyData.fitnessLevel.tiempoEjercicio
         );
       case 5:
         return true; // El historial médico es opcional
       case 6:
         return !!(
           surveyData.dailyHabits.horasSueno &&
-          surveyData.dailyHabits.horasSueno !== '' &&
           surveyData.dailyHabits.calidadSueno &&
-          surveyData.dailyHabits.calidadSueno !== '' &&
           surveyData.dailyHabits.nivelEstres &&
-          surveyData.dailyHabits.nivelEstres !== '' &&
           surveyData.dailyHabits.consumoAgua &&
-          surveyData.dailyHabits.consumoAgua !== '' &&
           surveyData.dailyHabits.comidasPorDia &&
-          surveyData.dailyHabits.comidasPorDia !== '' &&
           surveyData.dailyHabits.habitosSnacks &&
-          surveyData.dailyHabits.habitosSnacks !== '' &&
           surveyData.dailyHabits.horasPantallas &&
-          surveyData.dailyHabits.horasPantallas !== '' &&
-          surveyData.dailyHabits.tipoTrabajo &&
-          surveyData.dailyHabits.tipoTrabajo !== ''
+          surveyData.dailyHabits.tipoTrabajo
         );
       case 7:
         return true; // La pantalla de finalización siempre está completa
@@ -237,49 +226,67 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [surveyData]);
 
-  const finishSurvey = useCallback(async () => {
+  const finishSurvey = useCallback(async (): Promise<boolean> => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         toast.error('Debes iniciar sesión para completar la encuesta');
         navigate('/login');
-        return;
+        return false;
       }
 
-      // Transformar los datos al formato esperado por el backend
+      // Transformar los datos al formato exacto esperado por el backend
       const transformedData = {
         personalInfo: {
-          genero: surveyData.personalInfo.genero.toLowerCase(),
           edad: surveyData.personalInfo.edad,
+          genero: surveyData.personalInfo.genero.toLowerCase(),
           altura: surveyData.personalInfo.altura,
           peso: surveyData.personalInfo.peso,
           nivelActividad: surveyData.personalInfo.nivelActividad.toLowerCase()
         },
+        foodPreferences: {
+          tipoDieta: Array.isArray(surveyData.foodPreferences.tipoDieta) 
+            ? surveyData.foodPreferences.tipoDieta 
+            : [surveyData.foodPreferences.tipoDieta],
+          alergias: Array.isArray(surveyData.foodPreferences.alergias)
+            ? surveyData.foodPreferences.alergias
+            : [surveyData.foodPreferences.alergias],
+          otrosAlergias: surveyData.foodPreferences.otrosAlergias || '',
+          alimentosFavoritos: Array.isArray(surveyData.foodPreferences.alimentosFavoritos)
+            ? surveyData.foodPreferences.alimentosFavoritos
+            : [surveyData.foodPreferences.alimentosFavoritos],
+          alimentosEvitados: surveyData.foodPreferences.alimentosEvitar 
+            ? [surveyData.foodPreferences.alimentosEvitar]
+            : []
+        },
         goalsObjectives: {
-          objetivoPrincipal: surveyData.goalsObjectives.objetivoPrincipal[0], // Tomar el primer objetivo
+          objetivoPrincipal: Array.isArray(surveyData.goalsObjectives.objetivoPrincipal)
+            ? surveyData.goalsObjectives.objetivoPrincipal[0]
+            : surveyData.goalsObjectives.objetivoPrincipal,
           tiempoMeta: surveyData.goalsObjectives.tiempoMeta,
           nivelCompromiso: surveyData.goalsObjectives.nivelCompromiso,
-          medicionProgreso: surveyData.goalsObjectives.medicionProgreso[0] // Tomar la primera medición
-        },
-        foodPreferences: {
-          tipoDieta: surveyData.foodPreferences.tipoDieta,
-          alergias: surveyData.foodPreferences.alergias,
-          otrosAlergias: surveyData.foodPreferences.otrosAlergias,
-          alimentosFavoritos: surveyData.foodPreferences.alimentosFavoritos,
-          alimentosEvitados: surveyData.foodPreferences.alimentosEvitar ? [surveyData.foodPreferences.alimentosEvitar] : []
+          medicionProgreso: Array.isArray(surveyData.goalsObjectives.medicionProgreso)
+            ? surveyData.goalsObjectives.medicionProgreso[0]
+            : surveyData.goalsObjectives.medicionProgreso
         },
         physicalCondition: {
           frecuenciaEjercicio: surveyData.fitnessLevel.frecuenciaEjercicio,
           tiempoDisponible: surveyData.fitnessLevel.tiempoEjercicio,
-          ejerciciosPreferidos: surveyData.fitnessLevel.tiposEjercicio,
-          equipamientoDisponible: surveyData.fitnessLevel.equipamiento
+          ejerciciosPreferidos: Array.isArray(surveyData.fitnessLevel.tiposEjercicio)
+            ? surveyData.fitnessLevel.tiposEjercicio
+            : [surveyData.fitnessLevel.tiposEjercicio],
+          equipamientoDisponible: Array.isArray(surveyData.fitnessLevel.equipamiento)
+            ? surveyData.fitnessLevel.equipamiento
+            : [surveyData.fitnessLevel.equipamiento]
         },
         medicalHistory: {
-          condicionCronica: surveyData.medicalHistory.condicionesCronicas.join(', '),
-          otrasCondiciones: surveyData.medicalHistory.otrasCondiciones,
-          medicamentos: surveyData.medicalHistory.medicamentos,
-          lesiones: surveyData.medicalHistory.lesionesRecientes,
-          antecedentesFamiliares: surveyData.medicalHistory.antecedentesFamiliares
+          condicionCronica: Array.isArray(surveyData.medicalHistory.condicionesCronicas)
+            ? surveyData.medicalHistory.condicionesCronicas.join(', ')
+            : surveyData.medicalHistory.condicionesCronicas || 'Ninguna',
+          otrasCondiciones: surveyData.medicalHistory.otrasCondiciones || '',
+          medicamentos: surveyData.medicalHistory.medicamentos || '',
+          lesiones: surveyData.medicalHistory.lesionesRecientes || '',
+          antecedentesFamiliares: surveyData.medicalHistory.antecedentesFamiliares || ''
         },
         dailyHabits: {
           horasSueno: surveyData.dailyHabits.horasSueno,
@@ -293,6 +300,8 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
       };
 
+      console.log('Datos a enviar:', JSON.stringify(transformedData, null, 2)); // Para debugging
+
       const response = await axios.post(
         'http://localhost:8000/api/survey/complete',
         transformedData,
@@ -305,14 +314,23 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       if (response.status === 200) {
         toast.success('¡Encuesta completada con éxito!');
+        // Reseteamos la encuesta después de completarla exitosamente
         resetSurvey();
-        // No redirigimos aquí, dejamos que el componente Completion maneje la redirección
         return true;
       }
+      return false;
     } catch (error) {
       console.error('Error al completar la encuesta:', error);
-      toast.error('Hubo un error al completar la encuesta. Por favor, intenta nuevamente.');
-      throw error; // Propagar el error para que el componente Completion pueda manejarlo
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Detalles del error:', error.response.data);
+        const errorMessage = typeof error.response.data === 'object' 
+          ? JSON.stringify(error.response.data)
+          : error.response.data.detail || 'Hubo un error al completar la encuesta';
+        toast.error(`Error: ${errorMessage}`);
+      } else {
+        toast.error('Hubo un error al completar la encuesta. Por favor, intenta nuevamente.');
+      }
+      return false;
     }
   }, [surveyData, navigate, resetSurvey]);
 

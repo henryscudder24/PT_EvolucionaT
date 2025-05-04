@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSurvey } from '../context/SurveyContext';
 import PersonalInfo from './steps/PersonalInfo';
 import FoodPreferences from './steps/FoodPreferences';
@@ -10,7 +10,12 @@ import Completion from './steps/Completion';
 import SurveyProgress from './SurveyProgress';
 
 const Survey: React.FC = () => {
-  const { currentStep } = useSurvey();
+  const { currentStep, resetSurvey } = useSurvey();
+
+  // Resetear la encuesta cuando se monta el componente
+  useEffect(() => {
+    resetSurvey();
+  }, [resetSurvey]);
 
   const renderCurrentStep = () => {
     switch (currentStep) {

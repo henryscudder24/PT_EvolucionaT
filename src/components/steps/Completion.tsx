@@ -2,25 +2,42 @@ import { useState } from 'react';
 import { useSurvey } from '../../context/SurveyContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { CircularProgress, Alert } from '@mui/material';
+import { CircularProgress, Alert, LinearProgress, Box, Typography } from '@mui/material';
 import axios from 'axios';
 
 const Completion: React.FC = () => {
-  const { finishSurvey, surveyData } = useSurvey();
+  const { finishSurvey } = useSurvey();
   const { token } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
 
   const generatePlans = async () => {
     setLoading(true);
     setError(null);
+    setProgress(0);
 
     try {
-      // Primero completar la encuesta y guardar las métricas
-      await finishSurvey();
+      // Primero completar la encuesta
+      const surveyCompleted = await finishSurvey();
+      if (!surveyCompleted) {
+        throw new Error('Error al completar la encuesta');
+      }
+      setProgress(20);
 
-      // Llamar a ambas APIs en paralelo
+      // Simular progreso mientras se procesan las APIs
+      const progressInterval = setInterval(() => {
+        setProgress((prevProgress) => {
+          if (prevProgress >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prevProgress + 10;
+        });
+      }, 1000);
+
+      // Llamar a ambas APIs en paralelo y guardar las respuestas
       const [trainingResponse, mealResponse] = await Promise.all([
         axios.post('http://localhost:8000/api/generate-training-plan', {}, {
           headers: { Authorization: `Bearer ${token}` }
@@ -30,12 +47,19 @@ const Completion: React.FC = () => {
         })
       ]);
 
-      // Guardar los planes en localStorage
+      // Guardar los planes en el localStorage temporalmente
       localStorage.setItem('trainingPlan', JSON.stringify(trainingResponse.data));
       localStorage.setItem('mealPlan', JSON.stringify(mealResponse.data));
 
-      // Redirigir a la página de recomendaciones
-      navigate('/recommendations');
+      // Completar la barra de progreso
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      // Pequeña pausa para mostrar el 100% antes de redirigir
+      setTimeout(() => {
+        navigate('/recommendations');
+      }, 500);
+
     } catch (err) {
       console.error('Error al generar planes:', err);
       setError('Hubo un error al generar tus planes personalizados. Por favor, intenta de nuevo.');
@@ -50,64 +74,66 @@ const Completion: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="text-center p-8">
-        <CircularProgress />
-        <p className="mt-4 text-gray-600">
+      <Box sx={{ width: '100%', p: 4 }}>
+        <Typography variant="h5" align="center" gutterBottom>
           Generando tus planes personalizados...
-        </p>
-      </div>
+        </Typography>
+        <Box sx={{ width: '100%', mt: 4 }}>
+          <LinearProgress 
+            variant="determinate" 
+            value={progress} 
+            sx={{
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: '#e0e0e0',
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 5,
+                backgroundColor: '#4CAF50',
+              },
+            }}
+          />
+          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
+            {progress}% completado
+          </Typography>
+        </Box>
+        <Typography variant="body1" align="center" sx={{ mt: 4, color: 'text.secondary' }}>
+          Por favor, espera mientras procesamos tu información...
+        </Typography>
+      </Box>
     );
   }
 
   if (error) {
-    return (
-      <div className="p-4">
-        <Alert severity="error">{error}</Alert>
-        <button
-          onClick={handleContinue}
-          className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Intentar de nuevo
-        </button>
-      </div>
+  return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <button
+            onClick={handleContinue}
+            className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-dark transition-colors"
+          >
+            Intentar de nuevo
+          </button>
+        </Box>
+      </Box>
     );
   }
 
   return (
-    <div className="text-center">
-      <div className="mb-8">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg
-            className="w-10 h-10 text-green-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        </div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+    <Box sx={{ textAlign: 'center', p: 4 }}>
+      <Typography variant="h4" gutterBottom sx={{ color: 'success.main', mb: 3 }}>
           ¡Felicidades!
-        </h3>
-        <p className="text-gray-600 mb-6">
-          Has completado la encuesta de salud y bienestar. Con esta información,
-          podremos crear un plan personalizado para ayudarte a alcanzar tus objetivos.
-        </p>
-      </div>
-
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 4 }}>
+        Has completado la encuesta. Ahora generaremos tus planes personalizados.
+      </Typography>
       <button
         onClick={handleContinue}
-        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-dark transition-colors"
       >
-        Ir al siguiente paso
+        Generar Planes
       </button>
-    </div>
+    </Box>
   );
 };
 

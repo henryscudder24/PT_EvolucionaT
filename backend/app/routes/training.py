@@ -61,13 +61,12 @@ async def generate_training_plan(
         - Equipamiento disponible: {', '.join([eq.equipo for eq in equipamiento])}
 
         Genera una tabla de entrenamiento con columnas:
-        Fecha (dd-mm-yyyy) | Deporte | Ejercicio | Repeticiones | Series | Link de ejercicio
+        Fecha (dd-mm-yyyy) | Deporte | Ejercicio | Repeticiones | Series
 
         – Cubre desde {datetime.now().strftime('%d-%m-%Y')} hasta {(datetime.now() + timedelta(days=30)).strftime('%d-%m-%Y')}
         – Dentro de ese rango, marca 5 días de entrenamiento y 2 de descanso (en descanso, pon "Descanso" en Deporte y "—" en las demás columnas)
         – Para cada día de entrenamiento, incluye exactamente 5 ejercicios distintos, cada uno en su fila
         – Alterna los tipos de ejercicio según preferencias
-        – Añade un enlace válido de YouTube para cada ejercicio. Elige solo URLs que devuelvan status 200 al hacer HEAD.
         – Devuelve solo la tabla, sin texto adicional.
         """
 
@@ -75,7 +74,7 @@ async def generate_training_plan(
         response = openai.chat.completions.create(
             model="gpt-4.1",
             messages=[
-                {"role": "system", "content": "Eres un experto en nutrición y entrenamiento."},
+                {"role": "system", "content": "Eres un experto en entrenamiento y deportes."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=8000
@@ -122,31 +121,47 @@ async def generate_meal_plan(
         favoritos = [p.valor for p in preferencias if p.tipo == 'favorito']
         alergias = [p.valor for p in preferencias if p.tipo == 'alergia']
 
+        # Obtener alimentos evitados
+        alimentos_evitados = db.query(models.AlimentosEvitados).filter(
+            models.AlimentosEvitados.id_perfil == perfil.id
+        ).all()
+        alimentos_evitar = [a.descripcion for a in alimentos_evitados]
+
         # Construir el prompt
         prompt = f"""
         El usuario:
         - Genero: {perfil.genero}
-        - Objetivo: {perfil.objetivo_principal}
-        - Dieta a seguir: {', '.join(dietas)}
-        - Ingredientes principales: {', '.join(favoritos)}
-        - Alimentos a evitar: {', '.join(alergias)}
+        - Objetivo principal: {perfil.objetivo_principal}
 
-        Genera una tabla de comidas con columnas:
-        Fecha (dd-mm-yyyy) | Comida | Plato | Proteínas | Grasas | Carbohidratos | Kcal Totales | Link de receta
+        - Dieta a seguir: {', '.join(dietas)}
+        - Alimentos favoritos: {', '.join(favoritos)}
+        - Alergias: {', '.join(alergias)}
+        - Alimentos a evitar: {', '.join(alimentos_evitar)}
+
+        Genera un plan de comidas con las siguientes especificaciones:
+
+        1. Formato de tabla con columnas:
+        Fecha (dd-mm-yyyy) | Comida | Plato | Proteínas | Grasas | Carbohidratos | Kcal Totales
+
+        3. Estructura diaria:
+        - Desayuno
+        - Snack 1
+        - Almuerzo
+        - Snack 2
+        - Cena
 
         – Cubre desde {datetime.now().strftime('%d-%m-%Y')} hasta {(datetime.now() + timedelta(days=30)).strftime('%d-%m-%Y')}
-        – No saltarse ningún dia desde el dia de hoy hasta el dia 30
-        – Cada día incluye 6 comidas debe ser: Desayuno → Snack1 → Almuerzo → Snack2 → Cena → Snack3
-        – Ajusta cada plato según restricciones, favoritos y evitar.
-        – Añade un enlace válido de YouTube para cada receta. Elige solo URLs que devuelvan status 200 al hacer HEAD.
-        – Devuelve solo la tabla, sin texto adicional.
+        – *Importante* No saltar ningún día
+        – Respetar estrictamente las alergias y restricciones
+        – Priorizar los alimentos favoritos del usuario
+        – ¨Importante¨ Devuelve solo la tabla, sin texto adicional ni comentarios.
         """
 
         # Llamar a OpenAI
         response = openai.chat.completions.create(
             model="gpt-4.1",
             messages=[
-                {"role": "system", "content": "Eres un experto en nutrición y planificación de comidas."},
+                {"role": "system", "content": "Eres un experto en nutrición y planificación de comidas, especializado en crear planes personalizados que respetan las preferencias y restricciones del usuario."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=14000

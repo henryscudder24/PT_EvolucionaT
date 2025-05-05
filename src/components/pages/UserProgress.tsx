@@ -5,6 +5,27 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import {
+    Box,
+    Container,
+    Typography,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Button,
+    TextField,
+    Grid,
+    IconButton,
+    Alert,
+    Snackbar,
+    CircularProgress
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import YouTube from 'react-youtube';
 
 interface SurveyData {
   perfil_usuario: {
@@ -23,11 +44,31 @@ interface ProgressData {
   valor: number | string;
   categoria?: string;
   detalles?: {
+    unidad?: string;
     horaAcostarse?: string;
     horaLevantarse?: string;
     latencia?: number;
     despertares?: number;
     calidad?: number;
+    ejercicio?: string;
+    repeticiones?: number;
+    notas?: string;
+    mediciones?: number[];
+    formula?: string;
+    peso?: number;
+    altura?: number;
+    edad?: number;
+    genero?: string;
+    cintura?: number;
+    cadera?: number;
+    medidas?: {
+      brazo?: number;
+      pecho?: number;
+      cintura?: number;
+      cadera?: number;
+      muslo?: number;
+      pantorrilla?: number;
+    };
   };
 }
 
@@ -45,7 +86,74 @@ interface MetricInput {
   calidad?: number;
   frecuenciaCardiaca?: number[];
   cargaMaxima?: number;
+  ejercicio?: string;
+  repeticiones?: number;
+  notas?: string;
+  medidas?: {
+    brazo?: number;
+    pecho?: number;
+    cintura?: number;
+    cadera?: number;
+    muslo?: number;
+    pantorrilla?: number;
+  };
 }
+
+const METRICAS_PERMITIDAS = [
+  'Peso corporal',
+  'Medidas corporales',
+  'Tasa metabólica basal (TMB)',
+  'IMC (Índice de Masa Corporal)',
+  'Relación cintura-cadera (WHR)',
+  '1RM y cargas máximas',
+  'Frecuencia cardíaca en reposo',
+  'Calidad del sueño'
+] as const;
+
+const EJERCICIOS_COMUNES = [
+  'Press de Banca',
+  'Sentadilla',
+  'Peso Muerto',
+  'Press Militar',
+  'Remo con Barra',
+  'Dominadas',
+  'Extensiones de Pierna',
+  'Curl de Bíceps',
+  'Extensiones de Tríceps',
+  'Elevaciones Laterales',
+  'Pull-ups',
+  'Dips',
+  'Zancadas',
+  'Extensiones de Hombro',
+  'Curl de Piernas',
+  'Extensiones de Espalda',
+  'Press de Piernas',
+  'Remo en Polea',
+  'Face Pulls',
+  'Otro'
+] as const;
+
+// Definir el tipo para las métricas permitidas
+type MetricType = typeof METRICAS_PERMITIDAS[number];
+
+// Definir el tipo para el objeto de videos
+const METRICAS_VIDEOS: Record<MetricType, string> = {
+  'Peso corporal': 'https://www.youtube.com/watch?v=LJJWUm_ycqY', // Cómo medir el peso correctamente
+  'Medidas corporales': 'https://www.youtube.com/watch?v=EowTFITG1KI', // Cómo tomar medidas corporales
+  'Tasa metabólica basal (TMB)': 'https://www.youtube.com/watch?v=sESIyKwfLJM', // Explicación de TMB
+  'IMC (Índice de Masa Corporal)': 'https://www.youtube.com/watch?v=m5I4M071KOA', // Cómo calcular IMC
+  'Relación cintura-cadera (WHR)': 'https://www.youtube.com/watch?v=uUBRq0SugEk', // Cómo medir WHR
+  '1RM y cargas máximas': 'https://www.youtube.com/watch?v=NIatFT-NDGA', // Cómo calcular 1RM
+  'Frecuencia cardíaca en reposo': 'https://www.youtube.com/watch?v=UGoIC4j2ttg', // Cómo medir FCR
+  'Calidad del sueño': 'https://www.youtube.com/watch?v=q-Cl34yuODA&t=40s' // Mejores hábitos de sueño
+};
+
+// Función para extraer el ID del video de YouTube
+const getYouTubeVideoId = (url: string): string | null => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
 
 const UserProgress: React.FC = () => {
   const { user, token } = useAuth();
@@ -61,10 +169,15 @@ const UserProgress: React.FC = () => {
     edad?: number;
     genero?: string;
   }>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [formData, setFormData] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (user) {
       fetchSurveyData();
+      loadProgressData();
     }
   }, [user]);
 
@@ -79,284 +192,257 @@ const UserProgress: React.FC = () => {
     }
   }, [surveyData]);
 
-  useEffect(() => {
-    if (startDate) {
-      generateEmptyProgressData();
-    }
-  }, [startDate, selectedMetric]);
-
-  const generateEmptyProgressData = () => {
-    const data: ProgressData[] = [];
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + 1);
-
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      data.push({
-        id: 0,
-        fecha: new Date(d),
-        valor: '',
-      });
-    }
-    setProgressData(data);
-  };
-
-  const fetchSurveyData = async () => {
+  const loadProgressData = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/survey-data', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSurveyData(response.data);
-      if (response.data?.perfil_usuario?.columnas?.medicion_progreso) {
-        setSelectedMetric(response.data.perfil_usuario.columnas.medicion_progreso);
-      }
-    } catch (error) {
-      console.error('Error al obtener datos de la encuesta:', error);
-      toast.error('Error al cargar los datos de progreso');
-    }
-  };
+      setLoading(true);
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setMetricInput(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleDateChange = (date: Date | null) => {
-    if (date) {
-      setStartDate(date);
-    }
-  };
-
-  const calculateTMB = (peso: number, altura: number, edad: number, genero: string): number => {
-    // Fórmula de Mifflin-St Jeor
-    if (genero?.toLowerCase() === 'masculino') {
-      return (10 * peso) + (6.25 * altura) - (5 * edad) + 5;
-    } else {
-      return (10 * peso) + (6.25 * altura) - (5 * edad) - 161;
-    }
-  };
-
-  const calculateIMC = (peso: number, altura: number): number => {
-    return peso / Math.pow(altura / 100, 2);
-  };
-
-  const getIMCCategory = (imc: number): string => {
-    if (imc < 18.5) return 'Bajo peso';
-    if (imc < 27) return 'Normal (saludable)';
-    if (imc < 32) return 'Sobrepeso';
-    if (imc < 37) return 'Obesidad grado I';
-    if (imc < 42) return 'Obesidad grado II';
-    return 'Obesidad grado III';
-  };
-
-  const calculateWHR = (cintura: number, cadera: number): number => {
-    return cintura / cadera;
-  };
-
-  const getWHRCategory = (whr: number, genero: string): string => {
-    if (genero.toLowerCase() === 'masculino') {
-      if (whr < 0.9) return 'Bajo riesgo';
-      if (whr < 1.0) return 'Riesgo moderado';
-      return 'Alto riesgo';
-    } else {
-      if (whr < 0.8) return 'Bajo riesgo';
-      if (whr < 0.85) return 'Riesgo moderado';
-      return 'Alto riesgo';
-    }
-  };
-
-  const calculateFrecuenciaCardiaca = (mediciones: number[]): number => {
-    if (mediciones.length === 0) return 0;
-    return mediciones.reduce((a, b) => a + b, 0) / mediciones.length;
-  };
-
-  const calculateEficienciaSueño = (
-    horaAcostarse: string,
-    horaLevantarse: string,
-    latencia: number,
-    despertares: number
-  ): number => {
-    const [horaAcostarseH, horaAcostarseM] = horaAcostarse.split(':').map(Number);
-    const [horaLevantarseH, horaLevantarseM] = horaLevantarse.split(':').map(Number);
-    
-    let tiempoTotal = (horaLevantarseH - horaAcostarseH) * 60 + (horaLevantarseM - horaAcostarseM);
-    if (tiempoTotal < 0) tiempoTotal += 24 * 60; // Ajuste para cuando pasa la medianoche
-    
-    const tiempoEfectivo = tiempoTotal - latencia - (despertares * 15); // 15 minutos por despertar
-    return (tiempoEfectivo / tiempoTotal) * 100;
-  };
-
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    try {
-      let valor: number | string = '';
-      let categoria: string | undefined;
-      let detalles: any = undefined;
-
-      switch (selectedMetric) {
-        case 'Peso corporal':
-          valor = metricInput.peso || 0;
-          break;
-
-        case 'Tasa metabólica basal (TMB)':
-          if (metricInput.peso && userData.altura && userData.edad && userData.genero) {
-            valor = calculateTMB(metricInput.peso, userData.altura, userData.edad, userData.genero);
-            detalles = {
-              formula: 'Mifflin-St Jeor',
-              peso: metricInput.peso,
-              altura: userData.altura,
-              edad: userData.edad,
-              genero: userData.genero
-            };
-          }
-          break;
-
-        case 'IMC (Índice de Masa Corporal)':
-          if (metricInput.peso && userData.altura) {
-            const imc = calculateIMC(metricInput.peso, userData.altura);
-            valor = imc.toFixed(2);
-            categoria = getIMCCategory(imc);
-            detalles = {
-              peso: metricInput.peso,
-              altura: userData.altura
-            };
-          }
-          break;
-
-        case 'Relación cintura-cadera (WHR)':
-          if (metricInput.cintura && metricInput.cadera && userData.genero) {
-            const whr = calculateWHR(metricInput.cintura, metricInput.cadera);
-            valor = whr.toFixed(2);
-            categoria = getWHRCategory(whr, userData.genero);
-            detalles = {
-              cintura: metricInput.cintura,
-              cadera: metricInput.cadera
-            };
-          }
-          break;
-
-        case '1RM y cargas máximas':
-          valor = metricInput.cargaMaxima || 0;
-          break;
-
-        case 'Frecuencia cardíaca en reposo':
-          if (metricInput.frecuenciaCardiaca) {
-            const promedio = calculateFrecuenciaCardiaca(metricInput.frecuenciaCardiaca);
-            valor = promedio.toFixed(0);
-            detalles = {
-              mediciones: metricInput.frecuenciaCardiaca
-            };
-          }
-          break;
-
-        case 'Calidad del sueño':
-          if (metricInput.horaAcostarse && metricInput.horaLevantarse && 
-              metricInput.latencia !== undefined && metricInput.despertares !== undefined) {
-            const eficiencia = calculateEficienciaSueño(
-              metricInput.horaAcostarse,
-              metricInput.horaLevantarse,
-              metricInput.latencia,
-              metricInput.despertares
-            );
-            valor = 'Registrado';
-            categoria = `Eficiencia: ${eficiencia.toFixed(1)}%`;
-            detalles = {
-              horaAcostarse: metricInput.horaAcostarse,
-              horaLevantarse: metricInput.horaLevantarse,
-              latencia: metricInput.latencia,
-              despertares: metricInput.despertares,
-              calidad: metricInput.calidad,
-              eficiencia: eficiencia
-            };
-          }
-          break;
-      }
-
-      const dataToSave = {
-        tipo_metrica: selectedMetric,
-        fecha: new Date().toISOString().split('T')[0],
-        valor_principal: typeof valor === 'string' ? parseFloat(valor) || 0 : valor,
-        categoria,
-        detalles
-      };
-
-      await axios.post('http://localhost:8000/api/seguimiento-metrica', dataToSave, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      });
-
-      await fetchProgressData();
-
-      toast.success('Datos registrados correctamente');
-      setMetricInput({});
-    } catch (error) {
-      console.error('Error al guardar datos:', error);
-      toast.error('Error al guardar los datos');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchProgressData = async () => {
-    if (!user || !selectedMetric) return;
-    
-    try {
-      const response = await axios.get(`http://localhost:8000/api/seguimiento-metrica`, {
+      const response = await axios.get('http://localhost:8000/api/seguimiento-metrica', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
         params: {
           tipo_metrica: selectedMetric,
           fecha_inicio: startDate.toISOString().split('T')[0],
-          fecha_fin: new Date(startDate.getTime() + (30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]
+          fecha_fin: endDate.toISOString().split('T')[0]
         }
       });
 
-      const data = response.data.map((item: any) => ({
-        id: item.id,
-        fecha: new Date(item.fecha),
-        valor: item.valor_principal,
-        categoria: item.categoria,
-        detalles: item.detalles
-      }));
+      if (response.data) {
+        const formattedData = response.data.map((item: any) => {
+          // Para medidas corporales, calcular el promedio de las medidas no cero
+          let valor = item.valor_principal;
+          if (item.tipo_metrica === 'Medidas corporales' && item.detalles) {
+            const medidasNoCero = Object.values(item.detalles)
+              .filter((val: any) => val !== 0)
+              .map((val: any) => Number(val)) as number[];
+            if (medidasNoCero.length > 0) {
+              valor = medidasNoCero.reduce((sum: number, val: number) => sum + val, 0) / medidasNoCero.length;
+            }
+          }
 
-      data.sort((a: ProgressData, b: ProgressData) => b.fecha.getTime() - a.fecha.getTime());
-
-      setProgressData(data);
-    } catch (error) {
-      console.error('Error al cargar datos de seguimiento:', error);
-      toast.error('Error al cargar el historial de seguimiento');
+          return {
+            id: item.id,
+            fecha: new Date(item.fecha),
+            valor: valor,
+            categoria: item.categoria,
+            detalles: item.detalles
+          };
+        });
+        setProgressData(formattedData.sort((a: ProgressData, b: ProgressData) => 
+          b.fecha.getTime() - a.fecha.getTime()
+        ));
+      }
+    } catch (error: any) {
+      console.error('Error al cargar datos de progreso:', error);
+      if (error.response?.status !== 404 && error.response?.status !== 422) {
+        toast.error('Error al cargar el historial de registros');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Actualizar loadProgressData cuando cambie la métrica seleccionada
   useEffect(() => {
-    if (user && selectedMetric) {
-      fetchProgressData();
+    if (selectedMetric) {
+      loadProgressData();
     }
-  }, [user, selectedMetric, startDate]);
+  }, [selectedMetric]);
 
-  const handleDelete = async (id: number, fecha: Date) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedMetric) return;
+
     try {
-      await axios.post(`http://localhost:8000/api/seguimiento-metrica/delete`, {
+      setIsLoading(true);
+      let newMetrica: any = {
+        tipo_metrica: selectedMetric,
+        fecha: new Date().toISOString().split('T')[0],
+        valor_principal: 0,
+        categoria: '',
+        detalles: {}
+      };
+
+      // Procesar según el tipo de métrica
+      switch (selectedMetric) {
+        case 'Peso corporal':
+          if (!formData.peso) {
+            throw new Error('El peso es requerido');
+          }
+          newMetrica.valor_principal = Number(formData.peso);
+          newMetrica.detalles = { unidad: 'kg' };
+          break;
+
+        case 'Medidas corporales':
+          const medidas = {
+            brazo: Number(formData.brazo) || 0,
+            pecho: Number(formData.pecho) || 0,
+            cintura: Number(formData.cintura) || 0,
+            cadera: Number(formData.cadera) || 0,
+            muslo: Number(formData.muslo) || 0,
+            pantorrilla: Number(formData.pantorrilla) || 0
+          };
+          newMetrica.detalles = medidas;
+          
+          // Calcular el promedio solo de las medidas que no son cero
+          const medidasNoCero = Object.entries(medidas)
+            .filter(([_, value]) => value !== 0)
+            .map(([_, value]) => Number(value));
+          
+          if (medidasNoCero.length > 0) {
+            const suma = medidasNoCero.reduce((sum: number, val: number) => sum + val, 0);
+            newMetrica.valor_principal = suma / medidasNoCero.length;
+          } else {
+            newMetrica.valor_principal = 0;
+          }
+          break;
+
+        case 'Tasa metabólica basal (TMB)':
+          if (!formData.peso || !userData.altura || !userData.edad || !userData.genero) {
+            throw new Error('Faltan datos necesarios para calcular la TMB');
+          }
+
+          const tmb = {
+              formula: 'Mifflin-St Jeor',
+            peso: Number(formData.peso),
+            altura: Number(userData.altura),
+            edad: Number(userData.edad),
+              genero: userData.genero
+            };
+          newMetrica.detalles = tmb;
+          
+          if (tmb.genero === 'masculino') {
+            newMetrica.valor_principal = (10 * tmb.peso) + (6.25 * tmb.altura) - (5 * tmb.edad) + 5;
+          } else {
+            newMetrica.valor_principal = (10 * tmb.peso) + (6.25 * tmb.altura) - (5 * tmb.edad) - 161;
+          }
+          break;
+
+        case 'IMC (Índice de Masa Corporal)':
+          if (!formData.peso || !userData.altura) {
+            throw new Error('Se requieren peso y altura para calcular el IMC');
+          }
+          const imc = {
+            peso: Number(formData.peso),
+            altura: Number(userData.altura) / 100 // Convertir a metros
+          };
+          newMetrica.detalles = imc;
+          newMetrica.valor_principal = imc.peso / (imc.altura * imc.altura);
+          break;
+
+        case 'Relación cintura-cadera (WHR)':
+          if (!formData.cintura || !formData.cadera) {
+            throw new Error('Se requieren medidas de cintura y cadera');
+          }
+          const whr = {
+            cintura: Number(formData.cintura),
+            cadera: Number(formData.cadera)
+          };
+          newMetrica.detalles = whr;
+          newMetrica.valor_principal = whr.cintura / whr.cadera;
+          break;
+
+        case '1RM y cargas máximas':
+          if (!formData.ejercicio || !formData.carga) {
+            throw new Error('Se requiere ejercicio y carga');
+          }
+          const oneRM = {
+            ejercicio: formData.ejercicio,
+            repeticiones: Number(formData.repeticiones) || 1,
+            notas: formData.notas || ''
+          };
+          newMetrica.detalles = oneRM;
+          newMetrica.valor_principal = Number(formData.carga);
+          break;
+
+        case 'Frecuencia cardíaca en reposo':
+          if (!formData.mediciones) {
+            throw new Error('Se requieren las mediciones de frecuencia cardíaca');
+          }
+          const mediciones = formData.mediciones.split(',')
+            .map((m: string) => Number(m.trim()))
+            .filter((m: number) => !isNaN(m));
+          
+          if (mediciones.length === 0) {
+            throw new Error('Las mediciones deben ser números válidos');
+          }
+          
+          newMetrica.detalles = { mediciones };
+          newMetrica.valor_principal = mediciones.reduce((a: number, b: number) => a + b, 0) / mediciones.length;
+          break;
+
+        case 'Calidad del sueño':
+          if (!formData.horaAcostarse || !formData.horaLevantarse || !formData.calidad) {
+            throw new Error('Se requieren hora de acostarse, levantarse y calidad del sueño');
+          }
+          const sueno = {
+            horaAcostarse: formData.horaAcostarse,
+            horaLevantarse: formData.horaLevantarse,
+            latencia: Number(formData.latencia) || 0,
+            despertares: Number(formData.despertares) || 0,
+            calidad: Number(formData.calidad)
+          };
+          newMetrica.detalles = sueno;
+          newMetrica.valor_principal = sueno.calidad;
+          break;
+      }
+
+      const response = await axios.post('http://localhost:8000/api/seguimiento-metrica', newMetrica, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if (response.data) {
+        setSuccess('Medición registrada correctamente');
+        setFormData({});
+        const updatedData = [...progressData];
+        const newRecord = {
+          id: response.data.id,
+          fecha: new Date(response.data.fecha),
+          valor: response.data.valor_principal,
+          categoria: response.data.categoria,
+          detalles: response.data.detalles
+        };
+        updatedData.unshift(newRecord);
+        setProgressData(updatedData);
+      }
+    } catch (err: any) {
+      console.error('Error al registrar la medición:', err.response?.data || err);
+      setError(err.response?.data?.detail || err.message || 'Error al registrar la medición');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      // Obtener el registro a eliminar
+      const recordToDelete = progressData.find(data => data.id === id);
+      if (!recordToDelete) {
+        toast.error('Registro no encontrado');
+        return;
+      }
+
+      await axios.post('http://localhost:8000/api/seguimiento-metrica/delete', {
         id: id,
         tipo_metrica: selectedMetric,
-        fecha: fecha.toISOString().split('T')[0]
+        fecha: recordToDelete.fecha.toISOString().split('T')[0]
       }, {
         headers: {
           Authorization: `Bearer ${token}`,
-        }
+        },
       });
 
-      // Actualizar la tabla después de eliminar
-      await fetchProgressData();
+      // Recargar los datos después de eliminar
+      await loadProgressData();
       toast.success('Registro eliminado correctamente');
     } catch (error) {
-      console.error('Error al eliminar el registro:', error);
+      console.error('Error al eliminar registro:', error);
       toast.error('Error al eliminar el registro');
     }
   };
@@ -366,137 +452,362 @@ const UserProgress: React.FC = () => {
       switch (selectedMetric) {
         case 'Peso corporal':
           return (
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-800 mb-3">¿Cómo medir tu peso correctamente?</h3>
-              <div className="space-y-3 text-blue-700">
-                <p>1. <strong>Momento ideal:</strong> A primera hora de la mañana, después de ir al baño y antes de desayunar.</p>
-                <p>2. <strong>Ropa:</strong> Usa ropa ligera o mídete sin ropa.</p>
-                <p>3. <strong>Báscula:</strong> Asegúrate de que esté en una superficie plana y estable.</p>
-                <p>4. <strong>Postura:</strong> Párate derecho, con los pies juntos y el peso distribuido equitativamente.</p>
-                <p>5. <strong>Consistencia:</strong> Usa la misma báscula y mídete siempre a la misma hora.</p>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <input
+                  type="number"
+                  name="peso"
+                  value={formData.peso || ''}
+                  onChange={(e) => handleFormChange('peso', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                  placeholder="Peso (kg)"
+                  min="30"
+                  max="300"
+                  step="0.1"
+                />
+              </div>
+            </div>
+          );
+
+        case 'Medidas corporales':
+          return (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Brazo (cm)</label>
+                  <input
+                    type="number"
+                    name="brazo"
+                    value={formData.brazo || ''}
+                    onChange={(e) => handleFormChange('brazo', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Pecho (cm)</label>
+                  <input
+                    type="number"
+                    name="pecho"
+                    value={formData.pecho || ''}
+                    onChange={(e) => handleFormChange('pecho', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Cintura (cm)</label>
+                  <input
+                    type="number"
+                    name="cintura"
+                    value={formData.cintura || ''}
+                    onChange={(e) => handleFormChange('cintura', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Cadera (cm)</label>
+                  <input
+                    type="number"
+                    name="cadera"
+                    value={formData.cadera || ''}
+                    onChange={(e) => handleFormChange('cadera', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Muslo (cm)</label>
+                  <input
+                    type="number"
+                    name="muslo"
+                    value={formData.muslo || ''}
+                    onChange={(e) => handleFormChange('muslo', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Pantorrilla (cm)</label>
+                  <input
+                    type="number"
+                    name="pantorrilla"
+                    value={formData.pantorrilla || ''}
+                    onChange={(e) => handleFormChange('pantorrilla', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
               </div>
             </div>
           );
 
         case 'Tasa metabólica basal (TMB)':
           return (
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-800 mb-3">¿Qué es la Tasa Metabólica Basal?</h3>
-              <div className="space-y-3 text-blue-700">
-                <p>La TMB es la cantidad de energía que tu cuerpo necesita para mantener sus funciones básicas en reposo.</p>
-                <p><strong>Factores que influyen:</strong></p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Edad: A mayor edad, menor TMB</li>
-                  <li>Género: Los hombres suelen tener mayor TMB</li>
-                  <li>Composición corporal: Mayor masa muscular = mayor TMB</li>
-                  <li>Altura: Personas más altas tienen mayor TMB</li>
-                </ul>
-                <p className="mt-3"><strong>Recuerda:</strong> Este valor es una estimación y puede variar según tu nivel de actividad física.</p>
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-blue-800 text-sm">
+                  Datos actuales:
+                  <br />
+                  Altura: {userData.altura || 'No disponible'} cm
+                  <br />
+                  Edad: {userData.edad || 'No disponible'} años
+                  <br />
+                  Género: {userData.genero || 'No disponible'}
+                </p>
               </div>
+              <div className="flex items-center space-x-4">
+                <input
+                  type="number"
+                  name="peso"
+                  value={formData.peso || ''}
+                  onChange={(e) => handleFormChange('peso', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                  placeholder="Peso (kg)"
+                  min="30"
+                  max="300"
+                  step="0.1"
+                  required
+                />
+              </div>
+              {(!userData.altura || !userData.edad || !userData.genero) && (
+                <Alert severity="warning" sx={{ mt: 2 }}>
+                  Para calcular la TMB necesitas completar tu perfil con altura, edad y género.
+                </Alert>
+              )}
             </div>
           );
 
         case 'IMC (Índice de Masa Corporal)':
           return (
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-800 mb-3">¿Qué es el IMC y cómo interpretarlo?</h3>
-              <div className="space-y-3 text-blue-700">
-                <p>El IMC es una medida que relaciona tu peso con tu altura para estimar si tienes un peso saludable.</p>
-                <p><strong>Categorías de IMC:</strong></p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Bajo peso: IMC menor a 18.5</li>
-                  <li>Normal: IMC entre 18.5 y 26.9</li>
-                  <li>Sobrepeso: IMC entre 27 y 31.9</li>
-                  <li>Obesidad Grado I: IMC entre 32 y 36.9</li>
-                  <li>Obesidad Grado II: IMC entre 37 y 41.9</li>
-                  <li>Obesidad Grado III: IMC mayor o igual a 42</li>
-                </ul>
-                <p className="mt-3"><strong>Importante:</strong> El IMC es una herramienta de screening, no un diagnóstico médico. La composición corporal y otros factores de salud también son importantes.</p>
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-blue-800 text-sm">
+                  Altura actual: {userData.altura} cm
+                </p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <input
+                  type="number"
+                  name="peso"
+                  value={formData.peso || ''}
+                  onChange={(e) => handleFormChange('peso', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                  placeholder="Peso (kg)"
+                  min="30"
+                  max="300"
+                  step="0.1"
+                />
               </div>
             </div>
           );
 
         case 'Relación cintura-cadera (WHR)':
           return (
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-800 mb-3">¿Cómo medir la relación cintura-cadera?</h3>
-              <div className="space-y-3 text-blue-700">
-                <p><strong>Medición de la cintura:</strong></p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>De pie, con los pies separados al ancho de las caderas</li>
-                  <li>Localiza la parte más estrecha de tu cintura</li>
-                  <li>Mide justo por encima de la cresta iliaca</li>
-                  <li>Mantén la cinta métrica horizontal</li>
-                </ul>
-                <p><strong>Medición de la cadera:</strong></p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>De pie, con el peso distribuido equitativamente</li>
-                  <li>Localiza la parte más ancha de tus glúteos</li>
-                  <li>Mide alrededor de esta área</li>
-                  <li>Mantén la cinta métrica horizontal</li>
-                </ul>
-                <p className="mt-3"><strong>Recuerda:</strong> Respira normalmente durante la medición.</p>
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-blue-800 mb-2">Instrucciones de medición:</h3>
+                <div className="text-sm text-blue-700 space-y-2">
+                  <p><strong>Cintura:</strong> De pie, pies separados al ancho de las caderas. Medir justo por encima de la cresta iliaca.</p>
+                  <p><strong>Cadera:</strong> De pie, peso distribuido equitativamente. Medir en la parte más ancha de los glúteos.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="number"
+                  name="cintura"
+                  value={formData.cintura || ''}
+                  onChange={(e) => handleFormChange('cintura', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                  placeholder="Cintura (cm)"
+                  min="50"
+                  max="200"
+                  step="0.1"
+                />
+                <input
+                  type="number"
+                  name="cadera"
+                  value={formData.cadera || ''}
+                  onChange={(e) => handleFormChange('cadera', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                  placeholder="Cadera (cm)"
+                  min="50"
+                  max="200"
+                  step="0.1"
+                />
               </div>
             </div>
           );
 
         case '1RM y cargas máximas':
           return (
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-800 mb-3">¿Cómo determinar tu 1RM de forma segura?</h3>
-              <div className="space-y-3 text-blue-700">
-                <p><strong>Recomendaciones importantes:</strong></p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Realiza un calentamiento adecuado antes</li>
-                  <li>Usa un spotter (compañero) para ejercicios con barra</li>
-                  <li>Comienza con pesos que puedas manejar con seguridad</li>
-                  <li>Aumenta gradualmente el peso</li>
-                  <li>Descansa 3-5 minutos entre intentos</li>
-                </ul>
-                <p className="mt-3"><strong>Seguridad:</strong> Si no estás seguro, consulta con un profesional del ejercicio.</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Ejercicio</label>
+                  <select
+                    name="ejercicio"
+                    value={formData.ejercicio || ''}
+                    onChange={(e) => {
+                      if (e.target.value === 'Otro') {
+                        setFormData(prev => ({ ...prev, ejercicio: '' }));
+                      } else {
+                        setFormData(prev => ({ ...prev, ejercicio: e.target.value }));
+                      }
+                    }}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                  >
+                    <option value="">Selecciona un ejercicio</option>
+                    {EJERCICIOS_COMUNES.map((ejercicio) => (
+                      <option key={ejercicio} value={ejercicio}>
+                        {ejercicio}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Carga máxima (kg)</label>
+                  <input
+                    type="number"
+                    name="carga"
+                    value={formData.carga || ''}
+                    onChange={(e) => handleFormChange('carga', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                    placeholder="Carga máxima"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Repeticiones</label>
+                  <input
+                    type="number"
+                    name="repeticiones"
+                    value={formData.repeticiones || ''}
+                    onChange={(e) => handleFormChange('repeticiones', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                    placeholder="Número de repeticiones"
+                    min="1"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Notas (opcional)</label>
+                  <textarea
+                    name="notas"
+                    value={formData.notas || ''}
+                    onChange={(e) => handleFormChange('notas', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                    placeholder="Agrega notas sobre el ejercicio"
+                    rows={3}
+                  />
+                </div>
               </div>
             </div>
           );
 
         case 'Frecuencia cardíaca en reposo':
           return (
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-800 mb-3">¿Cómo medir tu frecuencia cardíaca en reposo?</h3>
-              <div className="space-y-3 text-blue-700">
-                <p><strong>Instrucciones para una medición precisa:</strong></p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Mídete a primera hora de la mañana, antes de levantarte</li>
-                  <li>Descansa 5 minutos antes de medir</li>
-                  <li>Realiza 3 mediciones con 1 minuto de descanso entre cada una</li>
-                  <li>Usa el promedio de las 3 mediciones</li>
-                </ul>
-                <p><strong>Método de medición:</strong></p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Coloca dos dedos en la arteria radial (muñeca) o carótida (cuello)</li>
-                  <li>Cuenta los latidos durante 60 segundos</li>
-                  <li>No presiones demasiado fuerte</li>
-                </ul>
-                <p className="mt-3"><strong>Valores normales:</strong> 60-100 latidos por minuto en adultos.</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                {[1, 2, 3].map((num) => (
+                  <input
+                    key={num}
+                    type="number"
+                    name={`mediciones${num}`}
+                    value={formData.mediciones?.[num - 1] || ''}
+                    onChange={(e) => {
+                      const newValue = parseInt(e.target.value);
+                      const newArray = [...(formData.mediciones || [])];
+                      newArray[num - 1] = newValue;
+                      setFormData(prev => ({
+                        ...prev,
+                        mediciones: newArray
+                      }));
+                    }}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                    placeholder={`Medición ${num}`}
+                    min="40"
+                    max="200"
+                  />
+                ))}
               </div>
             </div>
           );
 
         case 'Calidad del sueño':
           return (
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-800 mb-3">¿Cómo mejorar tu calidad de sueño?</h3>
-              <div className="space-y-3 text-blue-700">
-                <p><strong>Recomendaciones para un mejor sueño:</strong></p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Mantén un horario regular de sueño</li>
-                  <li>Evita la cafeína 6 horas antes de dormir</li>
-                  <li>Limita la exposición a pantallas antes de dormir</li>
-                  <li>Mantén tu habitación oscura, fresca y silenciosa</li>
-                  <li>Evita comidas pesadas antes de dormir</li>
-                </ul>
-                <p><strong>Para medir la latencia:</strong> Tiempo que tardas en quedarte dormido después de acostarte.</p>
-                <p><strong>Para medir despertares:</strong> Cuenta las veces que te despiertas durante la noche.</p>
-                <p className="mt-3"><strong>Eficiencia del sueño:</strong> Porcentaje de tiempo que realmente duermes del tiempo total en cama.</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <TextField
+                    type="time"
+                    name="horaAcostarse"
+                    value={formData.horaAcostarse || ''}
+                    onChange={(e) => handleFormChange('horaAcostarse', e.target.value)}
+                    label="Hora de acostarse"
+                    fullWidth
+                    required
+                  />
+                </div>
+                <div>
+                  <TextField
+                    type="time"
+                    name="horaLevantarse"
+                    value={formData.horaLevantarse || ''}
+                    onChange={(e) => handleFormChange('horaLevantarse', e.target.value)}
+                    label="Hora de levantarse"
+                    fullWidth
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Latencia (minutos)</label>
+                  <input
+                    type="number"
+                    name="latencia"
+                    value={formData.latencia || ''}
+                    onChange={(e) => handleFormChange('latencia', e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Número de despertares</label>
+                  <input
+                    type="number"
+                    name="despertares"
+                    value={formData.despertares || ''}
+                    onChange={(e) => handleFormChange('despertares', e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Calidad del sueño</label>
+                <select
+                  name="calidad"
+                  value={formData.calidad || ''}
+                  onChange={(e) => handleFormChange('calidad', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                >
+                  <option value="">Selecciona la calidad</option>
+                  <option value="1">1 - Muy malo</option>
+                  <option value="2">2 - Malo</option>
+                  <option value="3">3 - Regular</option>
+                  <option value="4">4 - Bueno</option>
+                  <option value="5">5 - Muy bueno</option>
+                </select>
               </div>
             </div>
           );
@@ -517,6 +828,33 @@ const UserProgress: React.FC = () => {
                 <p><strong>Pérdida de Peso Segura:</strong> 0.5-1 kg por semana es una pérdida de peso saludable y sostenible.</p>
                 <p><strong>Ganancia de Peso:</strong> Para ganancia muscular, 0.25-0.5 kg por semana es óptimo.</p>
                 <p className="mt-3 text-sm italic">Recuerda: El peso ideal varía según tu composición corporal, altura y objetivos específicos.</p>
+              </div>
+            </div>
+          );
+
+        case 'Medidas corporales':
+          return (
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-3">Valores de Referencia</h3>
+              <div className="space-y-3 text-green-700">
+                <p><strong>Proporciones ideales:</strong></p>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li><strong>Hombres:</strong></li>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Pecho: 1.6 veces la cintura</li>
+                    <li>Brazo: 0.36 veces el pecho</li>
+                    <li>Muslo: 0.53 veces el pecho</li>
+                    <li>Pantorrilla: 0.34 veces el pecho</li>
+                  </ul>
+                  <li><strong>Mujeres:</strong></li>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Pecho: 1.4 veces la cintura</li>
+                    <li>Brazo: 0.32 veces el pecho</li>
+                    <li>Muslo: 0.5 veces el pecho</li>
+                    <li>Pantorrilla: 0.32 veces el pecho</li>
+                  </ul>
+                </ul>
+                <p className="mt-3 text-sm italic">Estas proporciones son aproximadas y pueden variar según tu tipo de cuerpo y objetivos.</p>
               </div>
             </div>
           );
@@ -663,434 +1001,235 @@ const UserProgress: React.FC = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          {(() => {
-            switch (selectedMetric) {
-              case 'Peso corporal':
-                return (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <input
-                        type="number"
-                        name="peso"
-                        value={metricInput.peso || ''}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                        placeholder="Peso (kg)"
-                        min="30"
-                        max="300"
-                        step="0.1"
-                      />
-                      <button 
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark disabled:opacity-50"
-                      >
-                        {isLoading ? 'Registrando...' : 'Registrar'}
-                      </button>
-                    </div>
-                  </div>
-                );
-
-              case 'Tasa metabólica basal (TMB)':
-                return (
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-blue-800 text-sm">
-                        Datos actuales:
-                        <br />
-                        Altura: {userData.altura} cm
-                        <br />
-                        Edad: {userData.edad} años
-                        <br />
-                        Género: {userData.genero}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <input
-                        type="number"
-                        name="peso"
-                        value={metricInput.peso || ''}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                        placeholder="Peso (kg)"
-                        min="30"
-                        max="300"
-                        step="0.1"
-                      />
-                      <button 
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark disabled:opacity-50"
-                      >
-                        {isLoading ? 'Calculando...' : 'Calcular TMB'}
-                      </button>
-                    </div>
-                  </div>
-                );
-
-              case 'IMC (Índice de Masa Corporal)':
-                return (
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-blue-800 text-sm">
-                        Altura actual: {userData.altura} cm
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <input
-                        type="number"
-                        name="peso"
-                        value={metricInput.peso || ''}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                        placeholder="Peso (kg)"
-                        min="30"
-                        max="300"
-                        step="0.1"
-                      />
-                      <button 
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark disabled:opacity-50"
-                      >
-                        {isLoading ? 'Calculando...' : 'Calcular IMC'}
-                      </button>
-                    </div>
-                  </div>
-                );
-
-              case 'Relación cintura-cadera (WHR)':
-                return (
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-blue-800 mb-2">Instrucciones de medición:</h3>
-                      <div className="text-sm text-blue-700 space-y-2">
-                        <p><strong>Cintura:</strong> De pie, pies separados al ancho de las caderas. Medir justo por encima de la cresta iliaca.</p>
-                        <p><strong>Cadera:</strong> De pie, peso distribuido equitativamente. Medir en la parte más ancha de los glúteos.</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <input
-                        type="number"
-                        name="cintura"
-                        value={metricInput.cintura || ''}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                        placeholder="Cintura (cm)"
-                        min="50"
-                        max="200"
-                        step="0.1"
-                      />
-                      <input
-                        type="number"
-                        name="cadera"
-                        value={metricInput.cadera || ''}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                        placeholder="Cadera (cm)"
-                        min="50"
-                        max="200"
-                        step="0.1"
-                      />
-                    </div>
-                    <button 
-                      onClick={handleSubmit}
-                      disabled={isLoading}
-                      className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark disabled:opacity-50"
-                    >
-                      {isLoading ? 'Calculando...' : 'Calcular WHR'}
-                    </button>
-                  </div>
-                );
-
-                case '1RM y cargas máximas':
-                  return (
-                    <div className="space-y-4">
-                      <input
-                        type="number"
-                        name="cargaMaxima"
-                        value={metricInput.cargaMaxima || ''}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                        placeholder="Carga máxima (kg)"
-                        min="0"
-                        step="0.1"
-                      />
-                      <button 
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark disabled:opacity-50"
-                      >
-                        {isLoading ? 'Registrando...' : 'Registrar'}
-                      </button>
-                    </div>
-                  );
-
-                case 'Frecuencia cardíaca en reposo':
-                  return (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-3 gap-4">
-                        {[1, 2, 3].map((num) => (
-                          <input
-                            key={num}
-                            type="number"
-                            name={`frecuenciaCardiaca${num}`}
-                            value={metricInput.frecuenciaCardiaca?.[num - 1] || ''}
-                            onChange={(e) => {
-                              const newValue = parseInt(e.target.value);
-                              const newArray = [...(metricInput.frecuenciaCardiaca || [])];
-                              newArray[num - 1] = newValue;
-                              setMetricInput(prev => ({
-                                ...prev,
-                                frecuenciaCardiaca: newArray
-                              }));
-                            }}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                            placeholder={`Medición ${num}`}
-                            min="40"
-                            max="200"
-                          />
-                        ))}
-                      </div>
-                      <button 
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark disabled:opacity-50"
-                      >
-                        {isLoading ? 'Registrando...' : 'Registrar'}
-                      </button>
-                    </div>
-                  );
-
-                case 'Calidad del sueño':
-                  return (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Hora de acostarse</label>
-                          <input
-                            type="time"
-                            name="horaAcostarse"
-                            value={metricInput.horaAcostarse || ''}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Hora de levantarse</label>
-                          <input
-                            type="time"
-                            name="horaLevantarse"
-                            value={metricInput.horaLevantarse || ''}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Latencia (minutos)</label>
-                          <input
-                            type="number"
-                            name="latencia"
-                            value={metricInput.latencia || ''}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                            min="0"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Número de despertares</label>
-                          <input
-                            type="number"
-                            name="despertares"
-                            value={metricInput.despertares || ''}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                            min="0"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Calidad del sueño</label>
-                        <select
-                          name="calidad"
-                          value={metricInput.calidad || ''}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                        >
-                          <option value="">Selecciona la calidad</option>
-                          <option value="1">1 - Muy malo</option>
-                          <option value="2">2 - Malo</option>
-                          <option value="3">3 - Regular</option>
-                          <option value="4">4 - Bueno</option>
-                          <option value="5">5 - Muy bueno</option>
-                        </select>
-                      </div>
-                      <button 
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark disabled:opacity-50"
-                      >
-                        {isLoading ? 'Registrando...' : 'Registrar'}
-                      </button>
-                    </div>
-                  );
-
-                default:
-                  return null;
-              }
-            })()}
+          {renderRecommendations()}
         </div>
         <div className="space-y-6">
-          {renderRecommendations()}
           {renderOptimalValues()}
         </div>
       </div>
     );
   };
 
+  const fetchSurveyData = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/survey-data', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setSurveyData(response.data);
+      if (response.data?.perfil_usuario?.columnas?.medicion_progreso) {
+        setSelectedMetric(response.data.perfil_usuario.columnas.medicion_progreso);
+      }
+    } catch (error) {
+      console.error('Error al obtener datos de la encuesta:', error);
+      toast.error('Error al cargar los datos de progreso');
+    }
+  };
+
+  const handleFormChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Mejorar la función formatDetalles para todas las métricas
+  const formatDetalles = (detalles: any, tipoMetrica: string) => {
+    if (!detalles) return '';
+    
+    switch (tipoMetrica) {
+      case 'Peso corporal':
+        return `${detalles.unidad}`;
+      
+      case 'Medidas corporales':
+        const medidasNoCero = Object.entries(detalles)
+          .filter(([_, value]) => value !== 0);
+        return medidasNoCero
+          .map(([key, value]) => `${key}: ${value} cm`)
+          .join(', ');
+      
+      case 'Tasa metabólica basal (TMB)':
+        if (!detalles.formula || !detalles.genero) return 'Datos incompletos';
+        return `${detalles.formula} - ${detalles.genero} (Peso: ${detalles.peso} kg, Altura: ${detalles.altura} cm, Edad: ${detalles.edad} años)`;
+      
+      case 'IMC (Índice de Masa Corporal)':
+        return `Peso: ${detalles.peso} kg, Altura: ${detalles.altura} m`;
+      
+      case 'Relación cintura-cadera (WHR)':
+        return `Cintura: ${detalles.cintura} cm, Cadera: ${detalles.cadera} cm`;
+      
+      case '1RM y cargas máximas':
+        return `${detalles.ejercicio}${detalles.repeticiones ? ` - ${detalles.repeticiones} rep` : ''}${detalles.notas ? ` (${detalles.notas})` : ''}`;
+      
+      case 'Frecuencia cardíaca en reposo':
+        if (!detalles.mediciones?.length) return 'Sin mediciones';
+        const promedio = detalles.mediciones.reduce((a: number, b: number) => a + b, 0) / detalles.mediciones.length;
+        return `Promedio: ${promedio.toFixed(1)} lpm (${detalles.mediciones.join(', ')} lpm)`;
+      
+      case 'Calidad del sueño':
+        return `Calidad: ${detalles.calidad}/5, Latencia: ${detalles.latencia} min, Despertares: ${detalles.despertares}`;
+      
+      default:
+        return JSON.stringify(detalles);
+    }
+  };
+
+  const renderYouTubeVideo = () => {
+    return (
+      <Box sx={{ 
+        position: 'relative', 
+        width: '100%',  // Asegura que ocupe todo el ancho disponible
+        height: 0, 
+        paddingBottom: '56.25%', // Mantiene la relación 16:9 para el video
+        '& iframe': {
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          width: '100%', // Asegura que el iframe ocupe todo el ancho del contenedor
+          height: '100%' // Asegura que el iframe tenga la altura completa del contenedor
+        }
+      }}>
+        <YouTube
+          videoId={getYouTubeVideoId(METRICAS_VIDEOS[selectedMetric as MetricType])}
+          opts={{
+            width: '100%',
+            height: '100%',
+            playerVars: {
+              autoplay: 0,
+              modestbranding: 1,
+              rel: 0
+            }
+          }}
+        />
+      </Box>
+    );
+  };
+
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <p>Por favor inicia sesión para ver tu progreso.</p>
-      </div>
+      <Container>
+        <Typography variant="h5" gutterBottom>
+          Por favor, inicia sesión para ver tu progreso
+        </Typography>
+      </Container>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Monitorea tu cambio</h1>
-          <div className="flex space-x-4">
-            <button
-              onClick={() => navigate('/survey')}
-              className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors"
-            >
-              Modificar mis datos
-            </button>
-            <button
-              onClick={() => navigate('/profile')}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Mi Perfil
-            </button>
-          </div>
-        </div>
-        
-        <div className="space-y-6">
-          {surveyData?.perfil_usuario?.columnas?.medicion_progreso ? (
-            <>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Métrica seleccionada: {selectedMetric}
-                  </h2>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fecha inicial
-                  </label>
-                  <DatePicker
-                    selected={startDate}
-                    onChange={handleDateChange}
-                    dateFormat="dd/MM/yyyy"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                  />
-                </div>
-              </div>
+    <Container>
+      <Box sx={{ my: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Seguimiento de {selectedMetric || 'Métricas'}
+        </Typography>
 
-              <div className="bg-white p-6 rounded-lg border border-gray-200">
-                {renderMetricInput()}
-              </div>
+        {loading && (
+          <Box display="flex" justifyContent="center" my={4}>
+            <CircularProgress />
+          </Box>
+        )}
 
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold mb-4">Registro de seguimiento</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Fecha
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Valor
-                        </th>
-                        {selectedMetric === 'IMC (Índice de Masa Corporal)' && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Categoría
-                          </th>
-                        )}
-                        {selectedMetric === 'Calidad del sueño' && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Detalles
-                          </th>
-                        )}
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {progressData.map((data, index) => (
-                        <tr key={index} className={index === 0 ? 'bg-green-50' : ''}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {data.fecha.toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {data.valor}
-                          </td>
-                          {selectedMetric === 'IMC (Índice de Masa Corporal)' && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {data.categoria}
-                            </td>
-                          )}
-                          {selectedMetric === 'Calidad del sueño' && data.detalles && (
-                            <td className="px-6 py-4 text-sm text-gray-500">
-                              <div className="space-y-1">
-                                <p>Acostarse: {data.detalles.horaAcostarse}</p>
-                                <p>Levantarse: {data.detalles.horaLevantarse}</p>
-                                <p>Latencia: {data.detalles.latencia} min</p>
-                                <p>Despertares: {data.detalles.despertares}</p>
-                                <p>Calidad: {data.detalles.calidad}/5</p>
-                              </div>
-                            </td>
-                          )}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button
-                              onClick={() => handleDelete(data.id, data.fecha)}
-                              className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
-                              title="Eliminar registro"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
-              <p className="text-yellow-800">
-                No se han encontrado métricas de seguimiento. Por favor, completa la encuesta para establecer tus métricas de progreso.
-              </p>
-              <button
-                onClick={() => navigate('/survey')}
-                className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600 transition-colors"
-              >
-                Completar Encuesta
-              </button>
-            </div>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {success}
+          </Alert>
+        )}
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <Box>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Nueva Medición
+              </Typography>
+              <form onSubmit={handleSubmit}>
+                <Box sx={{ mb: 2 }}>
+                  {renderMetricInput()}
+                </Box>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  disabled={loading}
+                >
+                  Registrar Medición
+                </Button>
+              </form>
+            </Paper>
+          </Box>
+
+          {selectedMetric && METRICAS_VIDEOS[selectedMetric as MetricType] && (
+            <Box>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  Video Tutorial
+                </Typography>
+                {renderYouTubeVideo()}
+              </Paper>
+            </Box>
           )}
-        </div>
-      </div>
-    </div>
+
+          <Box>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Historial de Mediciones
+              </Typography>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell>Valor</TableCell>
+                      <TableCell>Categoría</TableCell>
+                      <TableCell>Detalles</TableCell>
+                      <TableCell>Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {progressData.map((data) => (
+                      <TableRow key={data.id}>
+                        <TableCell>
+                          {data.fecha.toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          {selectedMetric === 'Medidas corporales' 
+                            ? `Promedio: ${typeof data.valor === 'number' ? data.valor.toFixed(1) : data.valor} cm`
+                            : typeof data.valor === 'number' 
+                              ? data.valor.toFixed(2)
+                              : data.valor}
+                        </TableCell>
+                        <TableCell>{data.categoria || '-'}</TableCell>
+                        <TableCell>
+                          {formatDetalles(data.detalles, selectedMetric)}
+                        </TableCell>
+                        <TableCell>
+                          <IconButton
+                            onClick={() => handleDelete(data.id)}
+                            color="error"
+                            size="small"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Box>
+        </Box>
+      </Box>
+    </Container>
   );
 };
 

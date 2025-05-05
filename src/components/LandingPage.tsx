@@ -7,7 +7,7 @@ const LandingPage = () => {
       <div 
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: 'url("/images/personal/fitness-hero.jpg")',
+          backgroundImage: 'url("/images/personal/fitness-hero1.jpg")',
           backgroundSize: 'contain',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
@@ -36,7 +36,7 @@ const LandingPage = () => {
             <div className="relative pb-[56.25%] h-0">
               <iframe
                 className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
-                src="https://www.youtube.com/embed/TakRuEPV4mA?autoplay=0&mute=1&controls=1&showinfo=0&rel=0"
+                src="https://www.youtube.com/embed/dpO1IyIexUc?autoplay=0&mute=1&controls=1&showinfo=0&rel=0"
                 title="Motivación Fitness"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
